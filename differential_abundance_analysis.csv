@@ -1,0 +1,625 @@
+taxon,DESeq2 mean abundance,lfc,se,Analysis,Comparison
+Acidovorax sp000302535,1419.495595,-1.383156624,0.332457147,Visit,Rand-dis
+Acidovorax temperans,550.2876761,-1.651419541,0.325680522,Visit,Rand-dis
+Acinetobacter johnsonii,110.6961615,0.624325731,0.184918113,Visit,Rand-dis
+Acinetobacter pittii,120.9825008,0.763371854,0.186057862,Visit,Rand-dis
+Alistipes sp900770635,34.40000052,1.156939423,0.408942628,Visit,Rand-dis
+Bifidobacterium animalis,593.3581164,-0.663598089,0.202193876,Visit,Rand-dis
+Bifidobacterium dentium,744.9159173,-0.887351631,0.229504948,Visit,Rand-dis
+Bradyrhizobium sp000015165,1427.781327,-1.641795974,0.255830134,Visit,Rand-dis
+Bradyrhizobium sp003020075,2871.645071,-2.012372129,0.257964955,Visit,Rand-dis
+Comamonas kerstersii,532.6015992,-1.112940853,0.231910026,Visit,Rand-dis
+Enterococcus gilvus,12712.55289,1.493089558,0.315079001,Visit,Rand-dis
+Enterococcus faecium,239026,2.570926728,0.459229699,Visit,Rand-dis
+Finegoldia sp900766215,9371.31258,1.158038344,0.385784786,Visit,Rand-dis
+Haemophilus influenzae,104.6097588,-0.868017318,0.186911312,Visit,Rand-dis
+Haemophilus parainfluenzae,28.08075737,-1.233269313,0.163058438,Visit,Rand-dis
+Lancefieldella parvula,116.661908,-0.977448255,0.193199019,Visit,Rand-dis
+Lancefieldella sp000564995,175.2564868,-1.501470459,0.21091981,Visit,Rand-dis
+Lancefieldella sp900555335,50.53106864,-0.9277288,0.187370066,Visit,Rand-dis
+Lancefieldella sp902373375,285.2560454,-1.547455924,0.221903809,Visit,Rand-dis
+MGYG000000576,77.6887142,-0.841621986,0.185791935,Visit,Rand-dis
+MGYG000001284,59.60216803,-0.84208297,0.187325024,Visit,Rand-dis
+MGYG000002842,74.52848305,-0.896941195,0.177972718,Visit,Rand-dis
+MGYG000002843,459.9915939,-1.286188712,0.231867697,Visit,Rand-dis
+MGYG000003769,475.764,0.977357364,0.239112891,Visit,Rand-dis
+MGYG000003879,18.07866635,-0.569858462,0.184339702,Visit,Rand-dis
+Pauljensenia sp000278725,22.87810853,-1.058375381,0.178718545,Visit,Rand-dis
+Pauljensenia sp900541895,265.4479881,-1.464286517,0.196869916,Visit,Rand-dis
+Pauljensenia sp900556405,72.46086278,-0.660897516,0.196893765,Visit,Rand-dis
+Pauljensenia sp902373435,509.8082222,-0.786805187,0.218468657,Visit,Rand-dis
+Pigmentiphaga sp002188635,331.324396,-1.182396055,0.317274832,Visit,Rand-dis
+Pseudomonas putida,103.913,0.705453847,0.200463593,Visit,Rand-dis
+Ralstonia pickettii,24886.73133,-1.658424388,0.254922278,Visit,Rand-dis
+Staphylococcus warneri,132.2558924,0.671565492,0.21400012,Visit,Rand-dis
+Stenotrophomonas maltophilia,238.0346415,2.185422578,0.205824995,Visit,Rand-dis
+Stenotrophomonas maltophilia,110.8300641,0.577205498,0.19908535,Visit,Rand-dis
+Stenotrophomonas maltophilia,53.88091502,0.88036366,0.184214471,Visit,Rand-dis
+Stenotrophomonas maltophilia,64.54224964,0.559408964,0.193259097,Visit,Rand-dis
+Stenotrophomonas sp003028475,56.5373383,0.691295949,0.194534212,Visit,Rand-dis
+Streptococcus alactolyticus,145.5789048,-1.114148821,0.192789975,Visit,Rand-dis
+Streptococcus equinus,90.29641169,-1.150991928,0.181661288,Visit,Rand-dis
+Streptococcus gordonii,188.2240181,-1.023259097,0.204518399,Visit,Rand-dis
+Streptococcus infantarius,405.6518229,-1.470165841,0.227197732,Visit,Rand-dis
+Streptococcus koreensis,194.622638,-1.989258054,0.400350146,Visit,Rand-dis
+Streptococcus lutetiensis,2104.579458,-1.680408275,0.253704411,Visit,Rand-dis
+Streptococcus mitis,337.6176765,-1.545340852,0.472079571,Visit,Rand-dis
+Streptococcus oralis,272.9045409,-1.321266021,0.212252211,Visit,Rand-dis
+Streptococcus parasanguinis,891.4275703,-1.228747334,0.244348673,Visit,Rand-dis
+Streptococcus parasanguinis,823.1946174,-1.537039936,0.528402526,Visit,Rand-dis
+Streptococcus salivarius,6798.763508,-1.545771848,0.255278466,Visit,Rand-dis
+Streptococcus sobrinus,57.72157325,-1.406982869,0.181560529,Visit,Rand-dis
+Streptococcus sp000187445,44770.35904,-1.803188822,0.331765259,Visit,Rand-dis
+Streptococcus sp001556435,5235.186447,-1.478629546,0.345626403,Visit,Rand-dis
+Streptococcus sp004166885,150.6730843,-1.06220855,0.213848433,Visit,Rand-dis
+Streptococcus sp900543065,3475.557331,-1.206444145,0.290526946,Visit,Rand-dis
+Streptococcus sp900555155,136.0760736,-0.736147066,0.19497228,Visit,Rand-dis
+Streptococcus sp900755085,1126.741211,-0.822798874,0.257427625,Visit,Rand-dis
+Streptococcus sp902363395,144.8947531,-1.059252551,0.210424488,Visit,Rand-dis
+Streptococcus sp902373455,362.4749909,-1.151276941,0.23105244,Visit,Rand-dis
+Streptococcus vestibularis,4380.97559,-1.633280136,0.266825287,Visit,Rand-dis
+UMGS1590 sp900553245,119.7943669,-0.887356455,0.179357105,Visit,Rand-dis
+Achromobacter xylosoxidans,410.8330184,-0.881612983,0.300722698,Visit,Rand-fol
+Acidovorax sp000302535,1419.495595,-1.713109366,0.235190061,Visit,Rand-fol
+Acidovorax temperans,550.2876761,-1.655721646,0.222855489,Visit,Rand-fol
+Acinetobacter pittii,120.9825008,0.508721853,0.176311238,Visit,Rand-fol
+Agathobacter faecis,1436.093486,1.087295598,0.236861772,Visit,Rand-fol
+Alistipes sp001941065,88.84480549,-1.95502915,0.61762726,Visit,Rand-fol
+Anaerococcus hydrogenalis,7763.676668,1.08597766,0.290535523,Visit,Rand-fol
+Anaerococcus jeddahensis,5798.738749,1.300650083,0.317842832,Visit,Rand-fol
+Anaerococcus nagyae,967.7807481,0.938485038,0.24689745,Visit,Rand-fol
+Anaerococcus obesiensis,49457.07902,1.408862616,0.382607324,Visit,Rand-fol
+Anaerococcus prevotii,26627.7174,1.125121767,0.311248884,Visit,Rand-fol
+Anaerococcus rubeinfantis,6974.396909,1.49281816,0.335990722,Visit,Rand-fol
+Anaerococcus senegalensis,6439.102919,1.181773714,0.318297214,Visit,Rand-fol
+Anaerococcus sp900258475,2314.486116,1.177264541,0.283304656,Visit,Rand-fol
+Anaerococcus sp900541365,486.4751553,0.679843881,0.228442243,Visit,Rand-fol
+Anaerococcus sp900550345,7471.465285,1.255802301,0.291663592,Visit,Rand-fol
+Anaerococcus vaginalis,4330.224703,1.053349025,0.315598203,Visit,Rand-fol
+Anaeroglobus micronuciformis,4947.013013,1.886918979,0.563077023,Visit,Rand-fol
+Atlantibacter hermannii,172.7950279,-1.339198966,0.411553129,Visit,Rand-fol
+Bacteroides caccae,8005.794741,-1.678508806,0.535977745,Visit,Rand-fol
+Bacteroides eggerthii,431.2788513,-1.221273732,0.450330213,Visit,Rand-fol
+Bacteroides fluxus,341.5185156,-1.463436154,0.397583978,Visit,Rand-fol
+Bacteroides gallinarum,293.5827354,-1.148241185,0.425215804,Visit,Rand-fol
+Bacteroides ndongoniae,34.4038004,-1.403002705,0.380262033,Visit,Rand-fol
+Bacteroides neonati,61.53497834,-1.134054389,0.339667913,Visit,Rand-fol
+Bacteroides nordii,683.8992031,-1.460233147,0.453024181,Visit,Rand-fol
+Bacteroides oleiciplenus,445.0013914,-1.280333716,0.359451987,Visit,Rand-fol
+Bacteroides pyogenes,98.22102031,-1.150361611,0.297468424,Visit,Rand-fol
+Bacteroides sp900547205,129.8853024,-1.207673784,0.396336502,Visit,Rand-fol
+Bacteroides sp900555635,135.7817531,-0.995829194,0.379918338,Visit,Rand-fol
+Bacteroides sp900556215,464.4411054,-1.326575124,0.441480505,Visit,Rand-fol
+Bacteroides sp900765785,2831.412092,-1.513757529,0.463060261,Visit,Rand-fol
+Bacteroides stercoris,1120.884809,-1.12868287,0.428876701,Visit,Rand-fol
+Bacteroides togonis,65.35469775,-1.066854826,0.402757915,Visit,Rand-fol
+Bradyrhizobium sp000015165,1427.781327,-1.968125426,0.230542316,Visit,Rand-fol
+Bradyrhizobium sp003020075,2871.645071,-2.880719234,0.231040311,Visit,Rand-fol
+Butyricimonas sp003479425,59.50133545,-1.62642873,0.517970838,Visit,Rand-fol
+CAG-269 sp000435535,8.582802154,0.843017506,0.142051632,Visit,Rand-fol
+CAG-279 sp900548875,10.2521195,-1.36712119,0.469091855,Visit,Rand-fol
+CAG-831 sp000432775,10.7201392,-0.996960104,0.134612101,Visit,Rand-fol
+Cedecea davisae,96.08567809,-1.232307299,0.41953525,Visit,Rand-fol
+Chimaeribacter arupi,265.7699919,-1.283139958,0.191945895,Visit,Rand-fol
+Citrobacter gillenii,322.5391849,-1.380334638,0.172518837,Visit,Rand-fol
+Citrobacter werkmanii,2089.534058,-1.728355604,0.221066085,Visit,Rand-fol
+Citrobacter youngae,562.5971828,-1.286239839,0.420734648,Visit,Rand-fol
+Citrobacter farmeri,876.1094012,-1.620350543,0.439525502,Visit,Rand-fol
+Citrobacter sedlakii,210.5534375,-1.314009598,0.401849718,Visit,Rand-fol
+Citrobacter koseri,7889.606228,-2.060259706,0.416865384,Visit,Rand-fol
+Clostridioides difficile,2833.798613,0.687432854,0.260363759,Visit,Rand-fol
+Clostridioides difficile,66.87628638,0.6848328,0.168877254,Visit,Rand-fol
+Clostridium butyricum,493.3261151,0.819822224,0.191965108,Visit,Rand-fol
+Clostridium disporicum,14.47051211,1.780512924,0.426543638,Visit,Rand-fol
+Clostridium paraputrificum,724.0120484,1.387232576,0.204327396,Visit,Rand-fol
+Clostridium saudiense,61.21684281,1.188223474,0.171892836,Visit,Rand-fol
+Clostridium sp000435835,76.85549058,1.340498278,0.172872083,Visit,Rand-fol
+Clostridium sp001916075,39.0069181,0.927637415,0.165751681,Visit,Rand-fol
+Clostridium sp900540255,223.5354754,1.571534849,0.192201489,Visit,Rand-fol
+Clostridium sp900543325,15.63420864,0.772799209,0.147138594,Visit,Rand-fol
+Clostridium sp900547475,39.52124681,0.49479057,0.147217693,Visit,Rand-fol
+Clostridium sp900766315,29.98746389,0.907797557,0.154476486,Visit,Rand-fol
+Clostridium tertium,431.2773804,0.677097644,0.176996349,Visit,Rand-fol
+Clostridium perfringens,2201.878619,1.101449348,0.237275662,Visit,Rand-fol
+Comamonas kerstersii,532.6015992,-1.332132318,0.218367058,Visit,Rand-fol
+Coprobacter secundus,110.2709372,-1.523982387,0.471691725,Visit,Rand-fol
+Corynebacterium aurimucosum,6856.864018,1.012793976,0.31984468,Visit,Rand-fol
+Corynebacterium kefirresidentii,540.9292146,0.651506423,0.249952732,Visit,Rand-fol
+Corynebacterium sp900539985,2462.877257,0.967082025,0.283625312,Visit,Rand-fol
+Cronobacter malonaticus,248.3099172,-1.34425221,0.496150813,Visit,Rand-fol
+Cupriavidus metallidurans,1163.508434,-1.387573994,0.287099255,Visit,Rand-fol
+Cutibacterium acnes,371.2903299,-1.31217478,0.208198392,Visit,Rand-fol
+Dermabacter hominis,121.280415,0.786539506,0.18741464,Visit,Rand-fol
+Duncaniella sp900549445,6.859159189,-0.807895649,0.135880243,Visit,Rand-fol
+Enterobacter asburiae,1027.537389,-1.536359626,0.211401615,Visit,Rand-fol
+Enterobacter cancerogenus,136.6849463,-1.120585978,0.170878241,Visit,Rand-fol
+Enterobacter chengduensis,1537.765751,-1.552319774,0.232589843,Visit,Rand-fol
+Enterobacter cloacae,682.5384825,-1.58549413,0.200958408,Visit,Rand-fol
+Enterobacter cloacae,658.8107262,-1.510567891,0.183024037,Visit,Rand-fol
+Enterobacter cloacae,199.9508917,-1.269073357,0.176992368,Visit,Rand-fol
+Enterobacter hormaechei,3511.391081,-1.304346596,0.457048648,Visit,Rand-fol
+Enterobacter kobei,649.0693425,-1.404248048,0.462717229,Visit,Rand-fol
+Enterobacter ludwigii,130.5344512,-0.9876492,0.164860908,Visit,Rand-fol
+Enterobacter mori,202.6314339,-1.102280851,0.171404558,Visit,Rand-fol
+Enterobacter timonensis,351.6529762,-1.556133585,0.16640821,Visit,Rand-fol
+Enterobacter kobei,373.9993498,-1.613954518,0.179394635,Visit,Rand-fol
+Enterococcus italicus,287.7415071,-2.319419354,0.820168318,Visit,Rand-fol
+F0422 sp003999875,3723.033338,-1.340887201,0.447575432,Visit,Rand-fol
+Faecalitalea cylindroides,23.91478692,0.374166828,0.143177515,Visit,Rand-fol
+Finegoldia magna,31333.82391,1.171828667,0.44221552,Visit,Rand-fol
+Finegoldia sp900766215,9371.31258,1.43662902,0.334131929,Visit,Rand-fol
+Haemophilus parainfluenzae,157.9012421,0.700918273,0.17738813,Visit,Rand-fol
+Haemophilus parainfluenzae,58.66301406,0.742250228,0.16622359,Visit,Rand-fol
+Haemophilus parainfluenzae,37.72760494,0.583685959,0.163751027,Visit,Rand-fol
+Haemophilus parainfluenzae,43.02258117,0.540099181,0.169865341,Visit,Rand-fol
+Haemophilus parainfluenzae,73.28538919,0.681646268,0.178225104,Visit,Rand-fol
+Hafnia alvei,27.78147515,-1.606776913,0.147051676,Visit,Rand-fol
+KA00274 sp902373515,55.4948511,0.473463047,0.154669689,Visit,Rand-fol
+Klebsiella aerogenes,3599.547729,-1.776453941,0.208611595,Visit,Rand-fol
+Klebsiella pneumoniae,175650.1684,-1.936246692,0.635415312,Visit,Rand-fol
+Klebsiella quasipneumoniae,10235.65839,-1.904984547,0.571868734,Visit,Rand-fol
+Klebsiella quasivariicola,3213.362668,-1.596181621,0.234809325,Visit,Rand-fol
+Klebsiella variicola,33877.03851,-2.351242038,0.614649254,Visit,Rand-fol
+Klebsiella grimontii,4125.243859,-2.025663569,0.243311915,Visit,Rand-fol
+Klebsiella indica,1186.088816,-1.483331617,0.205370778,Visit,Rand-fol
+Klebsiella michiganensis,4083.906694,-1.511301877,0.248831677,Visit,Rand-fol
+Klebsiella oxytoca,726.0522522,-1.288040041,0.206949,Visit,Rand-fol
+Kluyvera ascorbata,1968.783493,-1.842154877,0.444676531,Visit,Rand-fol
+Kluyvera ascorbata,705.8161733,-1.616352044,0.19247773,Visit,Rand-fol
+Kluyvera sp902363335,201.3609954,-1.375921144,0.168555486,Visit,Rand-fol
+Lachnospira sp000436475,536.5828097,0.701469417,0.182361492,Visit,Rand-fol
+Lachnospira sp000437735,95.15858821,0.660866366,0.161126359,Visit,Rand-fol
+Lagierella massiliensis,5109.084571,1.112849458,0.27508398,Visit,Rand-fol
+Lancefieldella sp902373375,285.2560454,-0.826488767,0.213797038,Visit,Rand-fol
+Laribacter hongkongensis,187.5714202,-1.400538514,0.326889403,Visit,Rand-fol
+Leclercia adecarboxylata,134.0825381,-1.46251526,0.450903059,Visit,Rand-fol
+Leminorella grimontii,26.05701254,-0.997880166,0.155560715,Visit,Rand-fol
+Longibaculum sp900538465,193.887389,-1.329141786,0.433697421,Visit,Rand-fol
+MGYG000000680,120.5930672,0.475553832,0.174550332,Visit,Rand-fol
+MGYG000001112,21.10507192,0.886110593,0.156896403,Visit,Rand-fol
+MGYG000001977,963.056113,-1.431802137,0.495573102,Visit,Rand-fol
+MGYG000002896,10166.0937,1.515207705,0.335255279,Visit,Rand-fol
+MGYG000003060,30.32702565,0.715539419,0.153412991,Visit,Rand-fol
+MGYG000003735,110.9224952,-1.399095899,0.179274749,Visit,Rand-fol
+MGYG000003882,349.4586666,-1.499675487,0.515590863,Visit,Rand-fol
+MGYG000004180,241.9559099,-0.941675728,0.351522566,Visit,Rand-fol
+MGYG000004477,19.56152323,-2.383048143,0.915757142,Visit,Rand-fol
+MGYG000004582,340.9314034,0.535334858,0.191450743,Visit,Rand-fol
+MGYG000004650,108.6856934,-1.211230344,0.465875181,Visit,Rand-fol
+MGYG000004711,12.68477226,-1.522235583,0.457673159,Visit,Rand-fol
+MGYG000004824,47.49799603,-1.41134502,0.438850297,Visit,Rand-fol
+MGYG000004837,27.03306741,0.808031349,0.154136478,Visit,Rand-fol
+MGYG000004852,89.15145142,0.667560443,0.144861906,Visit,Rand-fol
+MGYG000004876,93.76836108,-1.518097453,0.463896938,Visit,Rand-fol
+MGYG000004886,1030.892875,-1.06669395,0.230872893,Visit,Rand-fol
+Mobilibacterium timonense,11.0626128,0.578867303,0.146240847,Visit,Rand-fol
+Moellerella wisconsensis,140.7498777,-1.479523855,0.515755589,Visit,Rand-fol
+Muribaculum intestinale,24.30899102,-1.383966325,0.489797503,Visit,Rand-fol
+Muribaculum sp002358615,34.69642422,-1.159833928,0.382938824,Visit,Rand-fol
+Neofamilia massiliensis,718.5468338,0.642689926,0.232232242,Visit,Rand-fol
+Odoribacter massiliensis,662.8452315,-1.81859412,0.507363011,Visit,Rand-fol
+OM05-12 sp900760755,112.5313171,-1.156856073,0.399711836,Visit,Rand-fol
+Pantoea agglomerans,33.84466129,-1.137759012,0.148291596,Visit,Rand-fol
+Pantoea ananatis,79.91663491,-1.240361854,0.474313577,Visit,Rand-fol
+Pantoea anthophila,20.71331833,-0.943409568,0.145900591,Visit,Rand-fol
+Pantoea brenneri,261.5147228,-1.010266348,0.179767357,Visit,Rand-fol
+Pantoea conspicua,73.48842627,-1.401651205,0.437054152,Visit,Rand-fol
+Pantoea sp002920175,72.20681942,-1.316389098,0.165699233,Visit,Rand-fol
+Parabacteroides acidifaciens,43.50694036,-1.397835185,0.396191768,Visit,Rand-fol
+Parabacteroides johnsonii,514.0882339,-1.538850596,0.443206315,Visit,Rand-fol
+Parabacteroides massiliensis,183.5531385,-1.587832436,0.438963676,Visit,Rand-fol
+Parabacteroides merdae,7232.182961,-1.541521562,0.541473135,Visit,Rand-fol
+Parabacteroides sp014287585,121.2190034,-1.944981025,0.455356784,Visit,Rand-fol
+Parabacteroides sp900547435,38.86402679,-1.353069789,0.406136551,Visit,Rand-fol
+Parabacteroides sp900549585,190.5018766,-0.836255003,0.320824339,Visit,Rand-fol
+Parabacteroides sp900552415,18.88386625,-1.355805483,0.490172742,Visit,Rand-fol
+Parabacteroides timonensis,17.56398295,-1.504839678,0.458540215,Visit,Rand-fol
+Paraclostridium sordellii,28.97705236,1.034799912,0.15218921,Visit,Rand-fol
+Paraprevotella sp900760455,98.83262183,-0.91840527,0.354894309,Visit,Rand-fol
+Paraprevotella xylaniphila,182.6094773,-1.028597656,0.340487614,Visit,Rand-fol
+Pauljensenia radingae,393.174409,0.630303014,0.21448608,Visit,Rand-fol
+Pauljensenia sp900541895,265.4479881,-1.080933913,0.181402702,Visit,Rand-fol
+Peptoniphilus harei,22207.23141,1.601002235,0.333109549,Visit,Rand-fol
+Peptoniphilus lacydonensis,2091.129994,1.000213038,0.243046599,Visit,Rand-fol
+Peptoniphilus phoceensis,8696.578239,0.923846436,0.294655678,Visit,Rand-fol
+Peptoniphilus raoultii,446.2972242,0.719661629,0.225497675,Visit,Rand-fol
+Peptoniphilus senegalensis,7219.136962,1.090582851,0.303400939,Visit,Rand-fol
+Peptoniphilus sp900538655,10610.96463,1.106239066,0.319198383,Visit,Rand-fol
+Peptoniphilus sp902363535,9503.590121,0.981636638,0.325481479,Visit,Rand-fol
+Peptoniphilus obesi,2669.07503,0.74245812,0.274849405,Visit,Rand-fol
+Peptostreptococcus sp900759325,890.4411597,0.702871577,0.217206027,Visit,Rand-fol
+Phocaeicola coprophilus,194.7579833,-1.761342239,0.388021651,Visit,Rand-fol
+Phocaeicola salanitronis,9.180808768,-1.264721178,0.13465392,Visit,Rand-fol
+Phocaeicola sp000436795,173.5474074,-1.385544056,0.421351599,Visit,Rand-fol
+Phocaeicola sp900544675,26.97569287,-1.210941877,0.359700756,Visit,Rand-fol
+Phocaeicola sp900551065,18.92172996,-1.379853411,0.477961724,Visit,Rand-fol
+Phocaeicola sp900551645,164.4056777,-1.49897235,0.51788887,Visit,Rand-fol
+Phocaeicola sp900552645,16.70300001,-1.26635782,0.368282714,Visit,Rand-fol
+Phytobacter diazotrophicus,87.27156387,-1.140763126,0.161793049,Visit,Rand-fol
+Phytobacter massiliensis,617.5118563,-1.382527636,0.495636217,Visit,Rand-fol
+Phytobacter sp002377245,141.5016644,-1.74977099,0.158336417,Visit,Rand-fol
+Phytobacter ursingii,632.4098802,-1.530772079,0.200868558,Visit,Rand-fol
+Pigmentiphaga sp002188635,331.324396,-1.503189742,0.304144208,Visit,Rand-fol
+Plesiomonas shigelloides,24.56920132,-0.881454351,0.145981011,Visit,Rand-fol
+Pluralibacter gergoviae,221.608991,-1.301846629,0.355439313,Visit,Rand-fol
+Prevotella sp900553465,49.25008192,-0.863006562,0.348786853,Visit,Rand-fol
+Prevotella sp900553595,110.4052095,-0.8757195,0.339577,Visit,Rand-fol
+Pseudescherichia sp002298805,178.1401664,-1.063913746,0.413638824,Visit,Rand-fol
+Pseudescherichia vulneris,122.7055997,-1.048756061,0.162602482,Visit,Rand-fol
+Rahnella variigena,65.36374345,-1.328601273,0.151906211,Visit,Rand-fol
+Ralstonia pickettii,24886.73133,-1.737594561,0.24606031,Visit,Rand-fol
+Raoultella ornithinolytica,2118.622934,-1.925946111,0.23382674,Visit,Rand-fol
+Robinsoniella sp900539655,480.5270204,-1.042953001,0.400280494,Visit,Rand-fol
+Romboutsia timonensis,123.5333315,1.125660249,0.184307709,Visit,Rand-fol
+Roseburia intestinalis,324.6655762,0.580280162,0.192468768,Visit,Rand-fol
+RUG023 sp900315435,19.740651,-1.219787779,0.449359975,Visit,Rand-fol
+Salmonella enterica,728.3054429,-1.302215038,0.428470131,Visit,Rand-fol
+Serratia marcescens,321.2572631,-1.747503397,0.400927271,Visit,Rand-fol
+Staphylococcus capitis,82.6188554,0.506333179,0.184783418,Visit,Rand-fol
+Staphylococcus haemolyticus,8806.566779,1.348370892,0.331827114,Visit,Rand-fol
+Stenotrophomonas maltophilia,238.0346415,1.757243273,0.175172234,Visit,Rand-fol
+Stenotrophomonas maltophilia,53.88091502,0.620424636,0.160090692,Visit,Rand-fol
+Streptococcus sp900543065,3475.557331,-1.448296109,0.441771576,Visit,Rand-fol
+Streptococcus sp900755085,1126.741211,-1.08515505,0.424501929,Visit,Rand-fol
+Succinivibrio sp900548485,46.30783613,-1.314061172,0.36059434,Visit,Rand-fol
+Superficieibacter sp900766525,277.4502266,-1.401452899,0.174680837,Visit,Rand-fol
+Terrisporobacter glycolicus,31.55851363,0.423271382,0.14605978,Visit,Rand-fol
+Terrisporobacter sp900557165,82.61393719,0.990655989,0.16644523,Visit,Rand-fol
+TF01-11 sp001414325,101.509428,0.435272212,0.16883269,Visit,Rand-fol
+UBA1232 sp900544815,193.3477671,-1.349563302,0.344060069,Visit,Rand-fol
+UBA3388 sp900546465,45.27834623,-1.237149772,0.442023854,Visit,Rand-fol
+UMGS1670 sp900548595,6.27029375,0.934497992,0.135419969,Visit,Rand-fol
+Yersinia bercovieri,174.5917456,-1.19403462,0.165617843,Visit,Rand-fol
+Yersinia intermedia,69.54655943,-0.755605919,0.168193449,Visit,Rand-fol
+Yersinia kristensenii,27.2709467,-0.903963796,0.152540679,Visit,Rand-fol
+Yersinia massiliensis,13.97756137,-0.940767549,0.141800149,Visit,Rand-fol
+Yersinia mollaretii,17.15193504,-1.009302839,0.149839228,Visit,Rand-fol
+Yersinia pestis,21.52016577,-0.707826412,0.150822226,Visit,Rand-fol
+Yokenella regensburgei,90.63403389,-1.387072532,0.149967289,Visit,Rand-fol
+43-108 sp001915545,23.54383679,-0.799088722,0.276046245,Visit,Dis-fol
+Acetatifactor sp900766575,35.40925027,0.478923933,0.174031158,Visit,Dis-fol
+Acinetobacter mesopotamicus,101.3664039,-0.915169466,0.317652785,Visit,Dis-fol
+Actinomyces graevenitzii,92.46311926,0.705064721,0.187814933,Visit,Dis-fol
+Actinomyces oris,82.45008328,1.50862353,0.532722555,Visit,Dis-fol
+Agathobacter faecis,1436.093486,1.067571478,0.24614517,Visit,Dis-fol
+Agathobacter rectalis,4331.734367,0.929530086,0.242699039,Visit,Dis-fol
+Agathobacter sp900546625,500.3878122,1.225188841,0.236471549,Visit,Dis-fol
+Agathobacter sp900548765,18.91663024,0.502237271,0.167025612,Visit,Dis-fol
+Alistipes sp900549685,21.22845063,-1.363001372,0.4534997,Visit,Dis-fol
+Anaerobutyricum soehngenii,1351.806746,0.604813569,0.245768771,Visit,Dis-fol
+Anaerostipes hadrus,2822.482974,2.393368206,0.602068379,Visit,Dis-fol
+Anaerostipes hadrus,171.4176532,1.038072714,0.202580278,Visit,Dis-fol
+Anaerostipes sp900066705,287.2572416,0.526357058,0.206448001,Visit,Dis-fol
+Anaerotruncus massiliensis,219.7662483,-1.214583696,0.461810844,Visit,Dis-fol
+Atlantibacter hermannii,172.7950279,-1.511702952,0.402495603,Visit,Dis-fol
+Bacteroides bouchesdurhonensis,1099.2829,-1.187590126,0.359196311,Visit,Dis-fol
+Bacteroides caccae,8005.794741,-2.048233326,0.53306674,Visit,Dis-fol
+Bacteroides cellulosilyticus,936.6521117,-1.167341396,0.438711616,Visit,Dis-fol
+Bacteroides eggerthii,431.2788513,-1.528176059,0.449963678,Visit,Dis-fol
+Bacteroides fluxus,341.5185156,-1.387971825,0.389674995,Visit,Dis-fol
+Bacteroides graminisolvens,18.19746023,-0.929993075,0.346751009,Visit,Dis-fol
+Bacteroides ndongoniae,34.4038004,-0.877661869,0.36075572,Visit,Dis-fol
+Bacteroides neonati,61.53497834,-0.763929727,0.317786106,Visit,Dis-fol
+Bacteroides nordii,683.8992031,-1.130666135,0.449173889,Visit,Dis-fol
+Bacteroides oleiciplenus,445.0013914,-1.18111801,0.365729443,Visit,Dis-fol
+Bacteroides pyogenes,98.22102031,-0.675490507,0.277977614,Visit,Dis-fol
+Bacteroides salyersiae,489.0750779,-1.486242451,0.407110003,Visit,Dis-fol
+Bacteroides sp002491635,788.9596444,-1.773712247,0.423708337,Visit,Dis-fol
+Bacteroides sp900553815,26.11867605,-1.086871576,0.360536715,Visit,Dis-fol
+Bacteroides sp900761785,2611.035588,-1.11063603,0.430025315,Visit,Dis-fol
+Bacteroides sp900765785,2831.412092,-1.563075735,0.471805196,Visit,Dis-fol
+Bacteroides sp900766195,80.53324341,-1.095672646,0.321677603,Visit,Dis-fol
+Bacteroides stercorirosoris,837.6465194,-1.166697709,0.406784139,Visit,Dis-fol
+Bacteroides togonis,65.35469775,-1.021128697,0.384737485,Visit,Dis-fol
+Bacteroides uniformis,18904.68207,-1.679307056,0.499173847,Visit,Dis-fol
+Bacteroides xylanisolvens,8237.753305,-1.388027356,0.516818647,Visit,Dis-fol
+Bifidobacterium adolescentis,922.8381104,1.052687513,0.260449357,Visit,Dis-fol
+Bifidobacterium angulatum,685.5097688,0.6875732,0.242280317,Visit,Dis-fol
+Bifidobacterium animalis,593.3581164,0.906576284,0.2109069,Visit,Dis-fol
+Bifidobacterium bifidum,20009.45626,1.207906044,0.342121158,Visit,Dis-fol
+Bifidobacterium catenulatum,2525.57763,1.27453604,0.278755631,Visit,Dis-fol
+Bifidobacterium dentium,744.9159173,1.000014062,0.241902293,Visit,Dis-fol
+Bifidobacterium gallicum,75.77031747,1.449113486,0.36345424,Visit,Dis-fol
+Bifidobacterium gallinarum,225.8343803,0.559583308,0.220033732,Visit,Dis-fol
+Bifidobacterium globosum,4660.123068,1.322952297,0.227585988,Visit,Dis-fol
+Bifidobacterium infantis,193534.3446,1.065035201,0.388033911,Visit,Dis-fol
+Bifidobacterium pseudocatenulatum,17313.49142,1.735789343,0.337665868,Visit,Dis-fol
+Bifidobacterium pullorum,291.8228047,0.575249305,0.221983387,Visit,Dis-fol
+Bifidobacterium ruminantium,840.3335113,0.860404544,0.24646392,Visit,Dis-fol
+Bifidobacterium scardovii,1894.937134,0.700590536,0.278813986,Visit,Dis-fol
+Bifidobacterium sp002742445,2479.26136,1.501608071,0.284112616,Visit,Dis-fol
+Bifidobacterium sp900551485,70.91378871,1.341049809,0.349917235,Visit,Dis-fol
+Bifidobacterium thermophilum,147.8066276,1.516437446,0.360648032,Visit,Dis-fol
+Bradyrhizobium sp003020075,2871.645071,-1.094010951,0.327445842,Visit,Dis-fol
+CAG-269 sp000435535,8.582802154,0.754925165,0.165079648,Visit,Dis-fol
+CAG-279 sp900548875,10.2521195,-1.093384426,0.426129606,Visit,Dis-fol
+CAG-313 sp900539265,11.65202105,-1.636618329,0.569847347,Visit,Dis-fol
+CAG-462 sp900291465,32.40727005,-0.796084559,0.326827226,Visit,Dis-fol
+Campylobacter concisus,11.27557621,0.707662133,0.156810063,Visit,Dis-fol
+Campylobacter jejuni,1239.012012,1.43335678,0.196466205,Visit,Dis-fol
+Cedecea davisae,96.08567809,-1.594280632,0.409222646,Visit,Dis-fol
+Chimaeribacter arupi,265.7699919,-1.296711773,0.489446556,Visit,Dis-fol
+Citrobacter europaeus,525.9395048,-1.098989674,0.234413524,Visit,Dis-fol
+Citrobacter gillenii,322.5391849,-1.172980633,0.216392957,Visit,Dis-fol
+Citrobacter portucalensis,340.1719203,-1.229556012,0.231939561,Visit,Dis-fol
+Citrobacter werkmanii,2089.534058,-1.604877915,0.257108848,Visit,Dis-fol
+Citrobacter amalonaticus,1303.37001,-1.532723663,0.248639596,Visit,Dis-fol
+Citrobacter farmeri,876.1094012,-1.422168316,0.262096645,Visit,Dis-fol
+Citrobacter sedlakii,210.5534375,-1.421186745,0.3947664,Visit,Dis-fol
+Citrobacter sp009363175,141.6448947,-1.135704697,0.388709471,Visit,Dis-fol
+Citrobacter koseri,7889.606228,-1.907687189,0.256828248,Visit,Dis-fol
+Clostridium neonatale,1187.34548,0.705881161,0.234271789,Visit,Dis-fol
+Clostridium saudiense,61.21684281,0.934673085,0.200073516,Visit,Dis-fol
+Clostridium sp000435835,76.85549058,1.277260467,0.199878233,Visit,Dis-fol
+Clostridium sp001916075,39.0069181,1.438004001,0.183999826,Visit,Dis-fol
+Clostridium sp900540255,223.5354754,0.723531148,0.228458497,Visit,Dis-fol
+Collinsella sp002391315,39.87249523,1.352628451,0.360038589,Visit,Dis-fol
+Collinsella sp900757285,101.3136789,1.483363142,0.603401006,Visit,Dis-fol
+Cronobacter malonaticus,248.3099172,-1.256706223,0.469410537,Visit,Dis-fol
+Cronobacter sakazakii,170.8196257,-1.09647825,0.423858415,Visit,Dis-fol
+Cutibacterium acnes,371.2903299,-1.428634871,0.330835065,Visit,Dis-fol
+Dermabacter hominis,121.280415,0.585029311,0.211287607,Visit,Dis-fol
+Dorea sp900550865,227.6876324,1.022882741,0.211026967,Visit,Dis-fol
+Dysosmobacter sp900770295,199.6120117,-1.112930437,0.431931854,Visit,Dis-fol
+Edwardsiella tarda,139.1353121,-1.201210198,0.453816954,Visit,Dis-fol
+Enterobacter asburiae,1027.537389,-1.150856177,0.363453935,Visit,Dis-fol
+Enterobacter bugandensis,544.5685244,-1.407707266,0.246217417,Visit,Dis-fol
+Enterobacter cancerogenus,136.6849463,-1.340198908,0.467734898,Visit,Dis-fol
+Enterobacter chengduensis,1537.765751,-1.295468965,0.253727401,Visit,Dis-fol
+Enterobacter cloacae,682.5384825,-1.519069964,0.238390807,Visit,Dis-fol
+Enterobacter cloacae,658.8107262,-1.416785143,0.238290153,Visit,Dis-fol
+Enterobacter cloacae,199.9508917,-1.439372855,0.222834067,Visit,Dis-fol
+Enterobacter hormaechei,3511.391081,-1.567126758,0.289442613,Visit,Dis-fol
+Enterobacter kobei,649.0693425,-1.113759976,0.234053764,Visit,Dis-fol
+Enterobacter ludwigii,130.5344512,-0.951256016,0.206124792,Visit,Dis-fol
+Enterobacter mori,202.6314339,-1.260182203,0.217583075,Visit,Dis-fol
+Enterobacter sichuanensis,212.2408133,-1.244388521,0.447582039,Visit,Dis-fol
+Enterobacter timonensis,351.6529762,-1.485091261,0.220303585,Visit,Dis-fol
+Enterobacter kobei,373.9993498,-1.404920787,0.22890732,Visit,Dis-fol
+Enterococcus devriesei,478.2453803,-1.355815726,0.223769273,Visit,Dis-fol
+Enterococcus gilvus,12712.55289,-2.066256784,0.299040045,Visit,Dis-fol
+Enterococcus durans,1827.765131,-2.065978321,0.609598751,Visit,Dis-fol
+Enterococcus faecium,239026.4612,-2.667774545,0.423565195,Visit,Dis-fol
+Enterococcus hirae,551.0913369,-2.290857323,0.596584443,Visit,Dis-fol
+Enterococcus lactis,13632.38783,-2.479052062,0.612405917,Visit,Dis-fol
+Enterococcus pernyi,681.8937872,-2.657014203,0.581308927,Visit,Dis-fol
+Enterococcus asini,85.77383107,-1.463895258,0.528817787,Visit,Dis-fol
+Enterococcus massiliensis,309.2311187,-1.360787756,0.490142603,Visit,Dis-fol
+Escherichia albertii,15819.33451,-1.597530325,0.475854195,Visit,Dis-fol
+Escherichia coli,191528.168,-1.823853839,0.542947223,Visit,Dis-fol
+Escherichia fergusonii,23260.18339,-1.636677866,0.47433451,Visit,Dis-fol
+Escherichia marmotae,25795.09074,-1.661644759,0.438273912,Visit,Dis-fol
+Escherichia sp000208585,12107.56947,-1.63359989,0.467572787,Visit,Dis-fol
+F0422 sp003999875,3723.033338,-1.818887407,0.438648905,Visit,Dis-fol
+Faecalibacillus faecis,232.748764,1.321905814,0.20997115,Visit,Dis-fol
+Faecalibacillus intestinalis,822.0908012,2.483296022,0.62161871,Visit,Dis-fol
+Faecalibacillus sp900544435,182.1249431,1.965986812,0.562917436,Visit,Dis-fol
+Fusicatenibacter saccharivorans,2446.347017,1.673884583,0.474798743,Visit,Dis-fol
+Fusicatenibacter sp900772675,270.5336449,0.979772145,0.202841002,Visit,Dis-fol
+Fusobacterium animalis,1918.234131,0.764021524,0.279448655,Visit,Dis-fol
+Fusobacterium sp000235465,69.7922142,0.639956791,0.200955243,Visit,Dis-fol
+Haemophilus influenzae,104.6097588,1.473898756,0.177759732,Visit,Dis-fol
+Haemophilus sp002998595,207.3066604,2.117994737,0.187313117,Visit,Dis-fol
+Haemophilus parainfluenzae,157.9012421,1.59082253,0.197850187,Visit,Dis-fol
+Haemophilus parainfluenzae,28.08075737,1.211579872,0.174002613,Visit,Dis-fol
+Haemophilus parainfluenzae,58.66301406,1.561168708,0.182589929,Visit,Dis-fol
+Haemophilus parainfluenzae,37.72760494,0.679561431,0.175526363,Visit,Dis-fol
+Haemophilus parainfluenzae,43.02258117,1.132676126,0.181531545,Visit,Dis-fol
+Haemophilus parainfluenzae,73.28538919,0.545251757,0.202408369,Visit,Dis-fol
+Haemophilus sp900756155,41.01676861,0.734868132,0.184379212,Visit,Dis-fol
+Haemophilus sp900756875,24.83946629,1.062037883,0.17022796,Visit,Dis-fol
+Hafnia alvei,27.78147515,-1.663207767,0.481171606,Visit,Dis-fol
+Hafnia paralvei,40.24214302,-1.273706454,0.427296504,Visit,Dis-fol
+Holdemania massiliensis,42.84058452,-0.889625663,0.19563231,Visit,Dis-fol
+Klebsiella aerogenes,3599.547729,-1.689919372,0.246117953,Visit,Dis-fol
+Klebsiella pneumoniae,175650.1684,-2.588760486,0.635867145,Visit,Dis-fol
+Klebsiella quasipneumoniae,10235.65839,-2.172812108,0.294993365,Visit,Dis-fol
+Klebsiella quasivariicola,3213.362668,-1.80553121,0.262201492,Visit,Dis-fol
+Klebsiella variicola,33877.03851,-1.844225976,0.305829666,Visit,Dis-fol
+Klebsiella grimontii,4125.243859,-1.828985481,0.293725932,Visit,Dis-fol
+Klebsiella indica,1186.088816,-1.43714104,0.237572055,Visit,Dis-fol
+Klebsiella michiganensis,4083.906694,-1.558890867,0.27353468,Visit,Dis-fol
+Klebsiella oxytoca,726.0522522,-1.510338459,0.237025842,Visit,Dis-fol
+Kluyvera ascorbata,1968.783493,-1.751596278,0.265057469,Visit,Dis-fol
+Kluyvera ascorbata,705.8161733,-2.041138961,0.401737746,Visit,Dis-fol
+Kluyvera sp902363335,201.3609954,-1.059730785,0.202894458,Visit,Dis-fol
+Lachnospira eligens,513.416572,0.56559511,0.22178166,Visit,Dis-fol
+Lachnospira rogosae,218.8064687,0.965086931,0.200418465,Visit,Dis-fol
+Lachnospira sp000436475,536.5828097,1.053699353,0.202106804,Visit,Dis-fol
+Lachnospira sp000437735,95.15858821,1.558836198,0.443621333,Visit,Dis-fol
+Lachnospira sp003537285,150.291158,1.997594553,0.544935575,Visit,Dis-fol
+Laribacter hongkongensis,187.5714202,-0.814407182,0.321836981,Visit,Dis-fol
+Leclercia adecarboxylata,134.0825381,-1.602162314,0.437693556,Visit,Dis-fol
+Leminorella richardii,84.01156246,-1.116484873,0.426898032,Visit,Dis-fol
+Ligilactobacillus ruminis,384.9238851,3.194678206,0.807758826,Visit,Dis-fol
+Lysinibacillus fusiformis,107.7103608,-0.892048082,0.356631886,Visit,Dis-fol
+Mediterraneibacter faecis,3398.236341,0.810263188,0.2527099,Visit,Dis-fol
+MGYG000000286,76.27528538,0.623556027,0.192070751,Visit,Dis-fol
+MGYG000000355,38.8785761,-1.10625022,0.40199731,Visit,Dis-fol
+MGYG000000625,16.98676855,0.495778277,0.16484408,Visit,Dis-fol
+MGYG000000860,42.76717529,1.435454898,0.183477952,Visit,Dis-fol
+MGYG000001112,21.10507192,0.857069566,0.168512399,Visit,Dis-fol
+MGYG000001735,696.1213371,-1.457552263,0.450986342,Visit,Dis-fol
+MGYG000001807,34.73150848,-1.303331672,0.502866486,Visit,Dis-fol
+MGYG000001813,65.04414807,0.783755993,0.181563364,Visit,Dis-fol
+MGYG000001977,963.056113,-1.787185879,0.498160031,Visit,Dis-fol
+MGYG000002209,88.18875315,-0.843873525,0.339274187,Visit,Dis-fol
+MGYG000002575,61.84944865,-0.819296311,0.305703188,Visit,Dis-fol
+MGYG000003021,14.14103142,0.793026416,0.164860616,Visit,Dis-fol
+MGYG000003060,30.32702565,1.25614782,0.171330011,Visit,Dis-fol
+MGYG000003769,475.7640197,-1.571185709,0.217531646,Visit,Dis-fol
+MGYG000003882,349.4586666,-1.458305479,0.214915795,Visit,Dis-fol
+MGYG000004002,11.64224781,-1.529932769,0.542926267,Visit,Dis-fol
+MGYG000004180,241.9559099,-1.0198849,0.338123231,Visit,Dis-fol
+MGYG000004188,21.34642986,-1.017481925,0.386970612,Visit,Dis-fol
+MGYG000004380,13.72458302,1.474895686,0.395647592,Visit,Dis-fol
+MGYG000004506,83.87266455,1.5174846,0.589628348,Visit,Dis-fol
+MGYG000004598,58.19220405,0.481952136,0.17905099,Visit,Dis-fol
+MGYG000004699,62.11081129,0.543019069,0.186556721,Visit,Dis-fol
+MGYG000004711,12.68477226,-1.306647366,0.43913147,Visit,Dis-fol
+MGYG000004727,147.4331563,-0.834342331,0.206315308,Visit,Dis-fol
+MGYG000004824,47.49799603,-1.30409188,0.428312293,Visit,Dis-fol
+MGYG000004837,27.03306741,1.500048403,0.171990801,Visit,Dis-fol
+MGYG000004886,1030.892875,-0.98987359,0.260804433,Visit,Dis-fol
+Odoribacter massiliensis,662.8452315,-1.810565998,0.484769806,Visit,Dis-fol
+OM05-12 sp003438995,39.30253337,-0.867521592,0.337150053,Visit,Dis-fol
+OM05-12 sp900760755,112.5313171,-1.100666394,0.376264663,Visit,Dis-fol
+Pantoea ananatis,79.91663491,-1.344455363,0.46710036,Visit,Dis-fol
+Parabacteroides acidifaciens,43.50694036,-1.06303268,0.391513106,Visit,Dis-fol
+Parabacteroides chinchillae,50.61981991,-1.350727782,0.425706528,Visit,Dis-fol
+Parabacteroides distasonis,23702.0655,-1.737898846,0.63138171,Visit,Dis-fol
+Parabacteroides gordonii,153.6453709,-1.556739911,0.46212789,Visit,Dis-fol
+Parabacteroides johnsonii,514.0882339,-1.623803926,0.445257467,Visit,Dis-fol
+Parabacteroides massiliensis,183.5531385,-1.953011222,0.424638262,Visit,Dis-fol
+Parabacteroides merdae,7232.182961,-1.588052071,0.55699114,Visit,Dis-fol
+Parabacteroides sp003480915,69.76008831,-1.02905491,0.187373651,Visit,Dis-fol
+Parabacteroides sp014287585,121.2190034,-1.915850844,0.441553658,Visit,Dis-fol
+Parabacteroides sp900547435,38.86402679,-1.467176841,0.385836329,Visit,Dis-fol
+Parabacteroides sp900549585,190.5018766,-1.099849818,0.329647064,Visit,Dis-fol
+Parabacteroides sp900552415,18.88386625,-1.630332528,0.437611346,Visit,Dis-fol
+Parabacteroides sp900760525,123.3330907,-1.346452979,0.438267548,Visit,Dis-fol
+Parabacteroides timonensis,17.56398295,-1.197284827,0.41839987,Visit,Dis-fol
+Paraprevotella clara,246.1779191,-1.28539341,0.368602845,Visit,Dis-fol
+Paraprevotella sp003477995,583.4393316,-1.130064813,0.335918497,Visit,Dis-fol
+Paraprevotella xylaniphila,182.6094773,-1.01129779,0.335287931,Visit,Dis-fol
+Peptoniphilus sp902363535,9503.590121,0.940050363,0.328526738,Visit,Dis-fol
+Phocaeicola coprocola,541.0631535,-1.244713642,0.432712739,Visit,Dis-fol
+Phocaeicola coprophilus,194.7579833,-1.075874316,0.373511059,Visit,Dis-fol
+Phocaeicola dorei,59336.08548,-1.544080781,0.583941132,Visit,Dis-fol
+Phocaeicola massiliensis,2380.983181,-1.657318455,0.480481548,Visit,Dis-fol
+Phocaeicola plebeius,318.5808393,-1.371414421,0.495894509,Visit,Dis-fol
+Phocaeicola sartorii,5837.857352,-1.558084064,0.579993012,Visit,Dis-fol
+Phocaeicola sp000436795,173.5474074,-1.450579587,0.420746521,Visit,Dis-fol
+Phocaeicola sp002493165,293.7298671,-1.195747012,0.390956213,Visit,Dis-fol
+Phocaeicola sp900544675,26.97569287,-1.138256931,0.347281453,Visit,Dis-fol
+Phocaeicola sp900546355,47.92767858,-0.963858632,0.333566013,Visit,Dis-fol
+Phocaeicola sp900551645,164.4056777,-1.2459131,0.484997343,Visit,Dis-fol
+Phytobacter diazotrophicus,87.27156387,-1.285243152,0.400139801,Visit,Dis-fol
+Phytobacter massiliensis,617.5118563,-1.123114589,0.227402738,Visit,Dis-fol
+Phytobacter sp002377245,141.5016644,-1.602601561,0.197173086,Visit,Dis-fol
+Phytobacter ursingii,632.4098802,-1.427103476,0.243440864,Visit,Dis-fol
+Pluralibacter gergoviae,221.608991,-0.874075709,0.337617749,Visit,Dis-fol
+Prevotella rara,137.6629813,-0.993247852,0.251825686,Visit,Dis-fol
+Prevotella sp002251365,88.80981442,-1.07426025,0.321171775,Visit,Dis-fol
+Prevotella stercorea,2203.976882,-1.333510034,0.423554832,Visit,Dis-fol
+Providencia rettgeri,291.832589,-1.08868557,0.212873482,Visit,Dis-fol
+Pseudescherichia sp002298805,178.1401664,-1.203925786,0.399632466,Visit,Dis-fol
+Pseudescherichia vulneris,122.7055997,-1.413941844,0.493013585,Visit,Dis-fol
+Pseudomonas aeruginosa,26031.38704,-1.078366582,0.40167227,Visit,Dis-fol
+Rahnella variigena,65.36374345,-1.513028466,0.458708785,Visit,Dis-fol
+Raoultella ornithinolytica,2118.622934,-1.713593269,0.271187444,Visit,Dis-fol
+Robinsoniella sp900539655,480.5270204,-0.985210738,0.377444368,Visit,Dis-fol
+Romboutsia timonensis,123.5333315,1.144416272,0.209350551,Visit,Dis-fol
+Roseburia intestinalis,324.6655762,0.582802151,0.213301016,Visit,Dis-fol
+Roseburia sp003483745,61.71515853,0.727671875,0.177872105,Visit,Dis-fol
+Roseburia sp900542495,314.1268121,0.77679754,0.205333526,Visit,Dis-fol
+Roseburia sp900552665,1543.661465,1.299293157,0.243479964,Visit,Dis-fol
+Salmonella bongori,194.2234859,-0.800671584,0.205313541,Visit,Dis-fol
+Salmonella enterica,728.3054429,-1.445481561,0.424786695,Visit,Dis-fol
+Serratia marcescens,321.2572631,-1.461503683,0.234567522,Visit,Dis-fol
+Slackia exigua,230.8088246,0.994097241,0.213063383,Visit,Dis-fol
+Staphylococcus haemolyticus,8806.566779,1.081684597,0.346364036,Visit,Dis-fol
+Staphylococcus haemolyticus,176.9328079,0.558414841,0.220198342,Visit,Dis-fol
+Streptococcus anginosus,986.2029658,1.075811419,0.262118624,Visit,Dis-fol
+Streptococcus equinus,90.29641169,2.118152673,0.511791323,Visit,Dis-fol
+Streptococcus infantarius,405.6518229,0.890990834,0.242398033,Visit,Dis-fol
+Streptococcus lutetiensis,2104.579458,1.333126073,0.27656557,Visit,Dis-fol
+Streptococcus oralis,272.9045409,0.925399589,0.220649556,Visit,Dis-fol
+Streptococcus salivarius,6798.763508,0.982794443,0.25544108,Visit,Dis-fol
+Streptococcus sanguinis,127.5421599,0.511834999,0.209544723,Visit,Dis-fol
+Streptococcus sp000187445,44770.35904,0.886405342,0.322410361,Visit,Dis-fol
+Streptococcus vestibularis,4380.97559,0.904967794,0.266291262,Visit,Dis-fol
+Superficieibacter sp900766525,277.4502266,-0.977587089,0.208703506,Visit,Dis-fol
+Terrisporobacter sp900557165,82.61393719,1.11341742,0.192620331,Visit,Dis-fol
+UBA1232 sp900544815,193.3477671,-1.139189773,0.333063863,Visit,Dis-fol
+Varibaculum massiliense,1059.194727,0.805105213,0.235659665,Visit,Dis-fol
+Veillonella atypica,15520.9,0.872932176,0.312407547,Visit,Dis-fol
+Veillonella dispar,1761.100539,0.994466225,0.303935009,Visit,Dis-fol
+Veillonella parvula,5868.896728,0.970581672,0.342669218,Visit,Dis-fol
+Weissella viridescens,173.0582221,-1.541590384,0.212584794,Visit,Dis-fol
+Yokenella regensburgei,90.63403389,-1.120689042,0.366361046,Visit,Dis-fol
+Agathobacter rectalis,8231.250152,-2.017208785,0.507540525,Countr_fol,SA-Uganda
+Blautia sp003287895,81.23405378,-1.221096354,0.398809353,Countr_fol,SA-Uganda
+Collinsella sp900556445,20.99857037,1.302621789,0.402560938,Countr_fol,SA-Uganda
+Dialister sp900759415,26.21694287,1.304527048,0.419189176,Countr_fol,SA-Uganda
+Leptotrichia wadei,35.39319131,1.40516041,0.398016579,Countr_fol,SA-Uganda
+MGYG000004598,76.30502576,-1.311788638,0.373729394,Countr_fol,SA-Uganda
+Prevotella sp900553965,14.27026429,1.198498987,0.398141056,Countr_fol,SA-Uganda
+Slackia isoflavoniconvertens,110.1708182,-3.6176765,0.661897835,Countr_fol,SA-Uganda
+Veillonella sp000431435,8086.021468,3.48625751,0.60753747,Countr_fol,SA-Uganda
+Acinetobacter junii,29.83056593,-1.71442946,0.39830586,Countr_fol,SA-Zambia
+Bradyrhizobium sp000015165,332.8474448,-1.942225462,0.495667442,Countr_fol,SA-Zambia
+MGYG000002931,395.7151917,-1.745257164,0.434377318,Countr_fol,SA-Zambia
+Pseudomonas juntendi,82.57788246,-2.094943492,0.399925834,Countr_fol,SA-Zambia
+Stenotrophomonas maltophilia,49.92985133,-1.695995832,0.42265808,Countr_fol,SA-Zambia
+Alistipes sp002161445,69.30094497,1.80495572,0.414407338,Countr_fol,SA-Zimbabwe
+Bacillus luti,165.6747226,-3.71469774,0.386570112,Countr_fol,SA-Zimbabwe
+Bariatricus comes,1264.703342,-1.843381457,0.483843319,Countr_fol,SA-Zimbabwe
+Bifidobacterium gallicum,98.51429033,1.446055498,0.393807577,Countr_fol,SA-Zimbabwe
+Bifidobacterium gallinarum,293.4356897,1.251405654,0.43025081,Countr_fol,SA-Zimbabwe
+CAG-485 sp900554845,213.7827849,1.539294088,0.456645045,Countr_fol,SA-Zimbabwe
+Clostridium perfringens,1062.840974,-1.469513827,0.46718616,Countr_fol,SA-Zimbabwe
+Collinsella aerofaciens,157.1762821,2.621604565,0.719238272,Countr_fol,SA-Zimbabwe
+Collinsella sp900541015,114.8813552,1.213422112,0.41178167,Countr_fol,SA-Zimbabwe
+Collinsella sp900757285,114.2127467,2.009152745,0.371981758,Countr_fol,SA-Zimbabwe
+Dorea longicatena,598.1606236,-1.479163327,0.409945807,Countr_fol,SA-Zimbabwe
+Dorea sp900550865,298.4241949,-1.322360005,0.386696754,Countr_fol,SA-Zimbabwe
+Mediterraneibacter faecis,4891.481878,-1.778362427,0.457563548,Countr_fol,SA-Zimbabwe
+MGYG000002122,70.27896144,1.131613791,0.384580937,Countr_fol,SA-Zimbabwe
+MGYG000002753,99.718834,1.225904192,0.389092999,Countr_fol,SA-Zimbabwe
+MGYG000002759,198.9465347,1.699125133,0.470806618,Countr_fol,SA-Zimbabwe
+MGYG000003045,84.52467851,1.764340647,0.369924716,Countr_fol,SA-Zimbabwe
+MGYG000004364,764.0067574,2.101677726,0.432762502,Countr_fol,SA-Zimbabwe
+MGYG000004506,90.17842945,1.798467328,0.392616888,Countr_fol,SA-Zimbabwe
+MGYG000004549,51.04301326,1.870033961,0.354074719,Countr_fol,SA-Zimbabwe
+MGYG000004630,43.80672462,1.404039487,0.399882049,Countr_fol,SA-Zimbabwe
+Paenibacillus lactis,563.6383435,1.581974139,0.443791098,Countr_fol,SA-Zimbabwe
+Phascolarctobacterium succinatutens,143.8324767,-6.132128597,1.044527824,Countr_fol,SA-Zimbabwe
+Prevotella sp900544825,2246.806637,-2.887526726,0.444021197,Countr_fol,SA-Zimbabwe
+Prevotella sp900548535,1047.251462,-1.697603903,0.36633265,Countr_fol,SA-Zimbabwe
+Prevotella sp900556795,6888.658237,-2.031239298,0.438783746,Countr_fol,SA-Zimbabwe
+Roseburia sp900552665,2347.068975,-1.58519931,0.47021486,Countr_fol,SA-Zimbabwe
+Corynebacterium amycolatum,638.961908,-1.93032022,0.587434893,Countr_fol,Uganda-Zambia
+Kocuria rhizophila,37.32046983,-2.152944516,0.473407587,Countr_fol,Uganda-Zambia
+MGYG000000763,1791.830722,-4.63685403,1.481024455,Countr_fol,Uganda-Zambia
+MGYG000003897,1336.549169,-4.991395968,1.102629691,Countr_fol,Uganda-Zambia
+MGYG000004598,76.30502576,2.238173732,0.474979718,Countr_fol,Uganda-Zambia
+Micrococcus luteus,237.1779488,-1.735218472,0.470557475,Countr_fol,Uganda-Zambia
+Porphyromonas asaccharolytica,3974.722832,-5.292293671,1.495890107,Countr_fol,Uganda-Zambia
+Porphyromonas sp900538385,4184.556262,-4.41530051,1.405562862,Countr_fol,Uganda-Zambia
+Porphyromonas sp900548415,1437.408068,-4.037092327,1.397076136,Countr_fol,Uganda-Zambia
+Pseudomonas aeruginosa,9066.128151,-2.415437801,0.526285729,Countr_fol,Uganda-Zambia
+Pseudomonas fulva,345.13224,-1.605326972,0.492181752,Countr_fol,Uganda-Zambia
+Stenotrophomonas maltophilia,49.92985133,-1.444414176,0.462795504,Countr_fol,Uganda-Zambia
+Bacillus luti,165.6747226,-3.233843952,0.453656717,Countr_fol,Uganda-Zimbabwe
+Fenollaria timonensis,10626.84187,-2.096632228,0.622341225,Countr_fol,Uganda-Zimbabwe
+MGYG000004598,76.30502576,1.539901025,0.443646388,Countr_fol,Uganda-Zimbabwe
+Parabacteroides sp900549585,75.13892424,-1.314729652,0.447216713,Countr_fol,Uganda-Zimbabwe
+Prevotella sp002251295,178.9452559,-1.668378641,0.432734784,Countr_fol,Uganda-Zimbabwe
+Prevotella sp900544825,2246.806637,-2.434104116,0.584925431,Countr_fol,Uganda-Zimbabwe
+Prevotella sp900548535,1047.251462,-2.226151509,0.440646643,Countr_fol,Uganda-Zimbabwe
+Prevotella sp900552675,56.39093863,-1.602903546,0.408630062,Countr_fol,Uganda-Zimbabwe
+Prevotella sp900556795,6888.658237,-2.742467097,0.504363993,Countr_fol,Uganda-Zimbabwe
+Prevotella sp900557255,20447.90928,-3.774856771,0.646074199,Countr_fol,Uganda-Zimbabwe
+Prevotella sp900767615,1007.273265,-2.061761775,0.491351966,Countr_fol,Uganda-Zimbabwe
+Prevotella sp900772835,24.67913354,-2.035804104,0.412109146,Countr_fol,Uganda-Zimbabwe
+Prevotellamassilia sp900540885,238.7892431,-2.171875307,0.409954329,Countr_fol,Uganda-Zimbabwe
+Bacillus luti,165.6747226,-3.931469093,0.48556558,Countr_fol,Zambia-Zimbabwe
+Dorea sp900550865,298.4241949,-2.071317258,0.47712817,Countr_fol,Zambia-Zimbabwe
+MGYG000002046,103.7500302,1.94751738,0.424505574,Countr_fol,Zambia-Zimbabwe
+Prevotella sp000436915,178.4936712,-1.751721412,0.498506864,Countr_fol,Zambia-Zimbabwe
+Prevotella sp900544825,2246.806637,-2.811924476,0.621514291,Countr_fol,Zambia-Zimbabwe
+Prevotella sp900546535,1708.595265,-3.020061204,0.645119392,Countr_fol,Zambia-Zimbabwe
+Prevotella sp900548535,1047.251462,-2.31776698,0.509940785,Countr_fol,Zambia-Zimbabwe
+Prevotella sp900552675,56.39093863,-1.274189792,0.445568293,Countr_fol,Zambia-Zimbabwe
+Prevotella sp900553155,149.4240897,-1.612601498,0.465655365,Countr_fol,Zambia-Zimbabwe
+Prevotella sp900556795,6888.658237,-2.34602568,0.587733881,Countr_fol,Zambia-Zimbabwe
+Prevotella sp900557255,20447.90928,-4.371286332,0.83615465,Countr_fol,Zambia-Zimbabwe
+Prevotella sp900767615,1007.273265,-2.587365997,0.568730736,Countr_fol,Zambia-Zimbabwe
+Prevotella sp900772835,24.67913354,-1.509030465,0.432484073,Countr_fol,Zambia-Zimbabwe
+Pseudomonas citronellolis,457.7486797,1.538706809,0.401050264,Countr_fol,Zambia-Zimbabwe
+Pseudomonas extremaustralis,84.47576308,1.524636732,0.461800843,Countr_fol,Zambia-Zimbabwe
+Pseudomonas juntendi,82.57788246,1.357239463,0.428201407,Countr_fol,Zambia-Zimbabwe
+Pseudomonas putida,90.47974703,1.322024957,0.421543378,Countr_fol,Zambia-Zimbabwe
+Pseudomonas sp900766265,89.9105348,1.381253849,0.40006078,Countr_fol,Zambia-Zimbabwe
+Stenotrophomonas maltophilia,77.77025735,1.212194989,0.392460597,Countr_fol,Zambia-Zimbabwe

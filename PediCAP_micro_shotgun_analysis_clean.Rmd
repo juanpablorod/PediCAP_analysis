@@ -1,0 +1,1711 @@
+---
+title: "PediCAP_micro_shotgun"
+author: "JPRR"
+date: "2025-03-12"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(vegan)
+library(tidyverse)
+library(ggsignif)
+library(RColorBrewer)
+library(gridExtra)
+library(grid)
+library(devtools)
+library(patchwork)
+library(ggplot2)
+library(dplyr)
+library(labdsv)
+library(phyloseq)
+library(corrplot)
+library(ComplexHeatmap)
+library(circlize)
+library(GetoptLong)
+library(DESeq2)
+library(ANCOMBC)
+library(maaslin3)
+library(gtsummary)
+library(decontam)
+library(betareg)
+library(survey)
+
+```
+
+```{r data upload}
+
+species <- read.csv("~/Species_UHGG.csv", header = TRUE, row.names = 1, check.names = FALSE)
+metadata <- read.csv("~/PediCAP_All_summary.csv", header = TRUE, row.names = 1)
+
+metadata_models <- read.csv("~/metadata_models.csv", header = TRUE, row.names = 1)
+metadata_models$IVonly_factorial <- as.factor(metadata_models$IVonly_factorial)
+metadata_models$IVonly_factorial <- relevel(metadata_models$IVonly_factorial, "No")
+metadata_models$Drug_factorial <- as.factor(metadata_models$Drug_factorial)
+metadata_models$Drug_factorial <- relevel(metadata_models$Drug_factorial, "Amoxicillin")
+metadata_models$Duration_factorial <- as.factor(metadata_models$Duration_factorial)
+metadata_models$Duration_factorial <- relevel(metadata_models$Duration_factorial, "4")
+
+```
+
+```{r rarefaction}
+
+rarefaction_kraken <- rarecurve(read.csv("~/kraken_UHGG.csv", header = TRUE, row.names = 1, check.names = FALSE), step = 100000, xlab = "Sample Size", ylab = "Species", col = "blue", label = FALSE, tidy = TRUE)
+
+rare_full_kraken <- ggplot(rarefaction_kraken, aes(x = Sample, y = Species, group = Site)) +
+  geom_path(color = "#0072B2") +
+  theme_bw() +
+  ylab("Species") +
+  xlab("Number of classified reads") +
+  labs(tag = "A") +
+  theme(text = element_text(size=14), plot.title = element_text(size = 14, hjust = 0.5), axis.text.y = element_text(size = 14), axis.text.x = element_text(size = 14))
+rare_full_kraken
+
+rare_fullred_kraken <- ggplot(rarefaction_kraken, aes(x = Sample, y = Species, group = Site)) +
+  geom_path(color = "#0072B2") +
+  theme_bw() +
+  ylab("Species") +
+  xlab("Number of classified reads") +
+  labs(tag = "B") +
+  geom_vline(xintercept = 100000) +
+  xlim(0,10000000) +
+  theme(text = element_text(size=14), plot.title = element_text(size = 14, hjust = 0.5), axis.text.y = element_text(size = 14), axis.text.x = element_text(size = 14))
+rare_fullred_kraken
+
+rows_to_drop = c(rowSums(read.csv("~/kraken_UHGG.csv", header = TRUE, row.names = 1, check.names = FALSE))<200000)
+species_less200k_kraken <- read.csv("~/kraken_UHGG.csv", header = TRUE, row.names = 1, check.names = FALSE)[rows_to_drop,]
+
+rarefaction_less200k_kraken <- rarecurve(species_less200k_kraken, step = 10000, xlab = "Sample Size", ylab = "Species", col = "blue", label = FALSE, tidy = TRUE)
+
+rare_less200k_kraken <- ggplot(rarefaction_less200k_kraken, aes(x = Sample, y = Species, group = Site)) +
+  geom_path(color = "#0072B2") +
+  theme_bw() +
+  ylab("Species") +
+  xlab("Number of classified reads") +
+  labs(tag = "C") +
+  geom_vline(xintercept = 100000) +
+  theme(text = element_text(size=14), plot.title = element_text(size = 14, hjust = 0.5), axis.text.y = element_text(size = 14), axis.text.x = element_text(size = 14))
+rare_less200k_kraken
+
+```
+
+```{r decontam}
+
+species_cont <- isContaminant(data.matrix(species), neg = metadata$Control, batch = metadata$Date_DNA_extraction)
+
+# remove contaminants
+
+transposed_species <- t(species)
+species_cont_merged <- merge(species_cont, transposed_species, by = "row.names", all = TRUE)
+rownames(species_cont_merged) = species_cont_merged$Row.names
+species_cont_merged = species_cont_merged[2:length(species_cont_merged)]
+species_clean <- species_cont_merged[species_cont_merged$contaminant == FALSE,]
+species_clean <- t(species_clean[7:length(species_clean)])
+# write.csv(species_clean, "~/R/PediCAP/micro_study_final/species_UHGG_clean.csv")
+# write.csv(species_cont, "~/R/PediCAP/micro_study_final/contaminant_species.csv")
+
+```
+
+```{r sample selection}
+
+#Merge sample metadata and reads
+
+species_metadata <- merge(metadata, species_clean, by = "row.names", all =TRUE)
+    rownames(species_metadata) = species_metadata$Row.names
+species_metadata = species_metadata[2:length(species_metadata)]
+
+#Selection of micro study QC ok
+
+species_clean_QCok <- species_metadata[species_metadata$Microbiology_study == "Yes",]
+species_clean_QCok <- species_clean_QCok[species_clean_QCok$Passed_read_threshold == "Yes",]
+    cols_to_drop = c(rep(FALSE, 87), colSums(species_clean_QCok[,88:ncol(species_clean_QCok)])>0)
+species_clean_QCok <- species_clean_QCok[,cols_to_drop]
+
+metadata_clean <- species_metadata[species_metadata$Microbiology_study == "Yes",1:87]
+metadata_clean <- metadata_clean[metadata_clean$Passed_read_threshold == "Yes",]
+
+```
+
+```{r normalization}
+
+species_otu = otu_table(species_clean_QCok, taxa_are_rows = FALSE)
+resample_species = rarefy_even_depth(species_otu, replace = TRUE, rngseed = 711)
+species_clean_resampled = as.data.frame(resample_species)
+
+# write.csv(metadata_clean, "~/R/PediCAP/micro_study_final/metadata_clean.csv")
+# write.csv(species_clean_resampled, "~/R/PediCAP/micro_study_final/species_clean_resampled.csv")
+
+```
+
+```{r calculate alpha diversity}
+
+species_shannon_resampled <- diversity(species_clean_resampled, index = "shannon")
+
+species_richness_resampled <- specnumber(species_clean_resampled)
+
+# alpha_species_resampled <- cbind(Shannon_species = species_shannon_resampled, Richness_species = species_richness_resampled)
+# write.csv(alpha_species_resampled, "~/R/PediCAP/micro_study_final/species_alpha_diversity.csv")
+
+```
+
+```{r normality}
+
+df_shapiro = data.frame()
+
+for (x in c(5,13:47,49:72,75,76,81:87)) {
+    col <- metadata_clean[,x]
+    df_shapiro = rbind(df_shapiro, c(print(colnames(metadata_clean[x])), print(shapiro.test(col)$p.value)))
+    }
+colnames(df_shapiro) <- c("Variable", "pvalue")
+
+```
+
+```{r kruskal_test_numeric}
+
+df_kruskal = data.frame()
+summary_kruskal = list()
+for (y in c(3,4,6,7,73,74,77:80)) {
+  row <- metadata_clean[,y]
+  for (x in c(5,13:47,49:72,75,76,81:87)) {
+    col <- metadata_clean[,x]
+    df_kruskal = rbind(df_kruskal, c(print(colnames(metadata_clean[y])), print(colnames(metadata_clean[x])), print(kruskal.test(col ~ row, metadata_clean)$p.value)))
+    summary_kruskal[[paste(colnames(metadata_clean[y]),colnames(metadata_clean[x]))]] = print(summarise(metadata_clean, .by = colnames(metadata_clean[y]), x = mean(.data[[colnames(metadata_clean[x])]])))
+    }
+  }
+colnames(df_kruskal) <- c("Categorical variable", "Numeric variable", "pvalue")
+lapply(summary_kruskal, function(x) write.table(data.frame(x), 'Summary_mean_numeric_vs_categorical.csv', append= T, sep=','))
+
+```
+
+```{r kruskal_test_numeric_per_timepoint}
+
+df_kruskal_randomization = data.frame()
+summary_kruskal_randomization = list()
+for (y in c(3,6,7,73,74,77:80)) {
+  row <- metadata_clean[metadata_clean$Visit == "Randomization",y]
+  for (x in c(5,13:47,49:72,75,76,81:87)) {
+    col <- metadata_clean[metadata_clean$Visit == "Randomization",x]
+    df_kruskal_randomization = rbind(df_kruskal_randomization, c(print(colnames(metadata_clean[y])), print(colnames(metadata_clean[x])), print(kruskal.test(col ~ row, metadata_clean[metadata_clean$Visit == "Randomization",])$p.value)))
+    summary_kruskal_randomization[[paste(colnames(metadata_clean[y]),colnames(metadata_clean[x]))]] = print(summarise(metadata_clean[metadata_clean$Visit == "Randomization",], .by = colnames(metadata_clean[y]), x = mean(.data[[colnames(metadata_clean[x])]])))
+    }
+  }
+colnames(df_kruskal_randomization) <- c("Categorical variable", "Numeric variable", "pvalue")
+lapply(summary_kruskal_randomization, function(x) write.table(data.frame(x), 'Summary_mean_numeric_vs_categorical_randomization.csv', append= T, sep=','))
+
+df_kruskal_discharge = data.frame()
+summary_kruskal_discharge = list()
+for (y in c(3,6,7,73,74,77:80)) {
+  row <- metadata_clean[metadata_clean$Visit == "Discharge",y]
+  for (x in c(5,13:47,49:72,75,76,81:87)) {
+    col <- metadata_clean[metadata_clean$Visit == "Discharge",x]
+    df_kruskal_discharge = rbind(df_kruskal_discharge, c(print(colnames(metadata_clean[y])), print(colnames(metadata_clean[x])), print(kruskal.test(col ~ row, metadata_clean[metadata_clean$Visit == "Discharge",])$p.value)))
+    summary_kruskal_discharge[[paste(colnames(metadata_clean[y]),colnames(metadata_clean[x]))]] = print(summarise(metadata_clean[metadata_clean$Visit == "Discharge",], .by = colnames(metadata_clean[y]), x = mean(.data[[colnames(metadata_clean[x])]])))
+    }
+  }
+colnames(df_kruskal_discharge) <- c("Categorical variable", "Numeric variable", "pvalue")
+lapply(summary_kruskal_discharge, function(x) write.table(data.frame(x), 'Summary_mean_numeric_vs_categorical_discharge.csv', append= T, sep=','))
+
+df_kruskal_followup = data.frame()
+summary_kruskal_followup = list()
+for (y in c(3,6,7,73,74,77:80)) {
+  row <- metadata_clean[metadata_clean$Visit == "Follow_up",y]
+  for (x in c(5,13:47,49:72,75,76,81:87)) {
+    col <- metadata_clean[metadata_clean$Visit == "Follow_up",x]
+    df_kruskal_followup = rbind(df_kruskal_followup, c(print(colnames(metadata_clean[y])), print(colnames(metadata_clean[x])), print(kruskal.test(col ~ row, metadata_clean[metadata_clean$Visit == "Follow_up",])$p.value)))
+    summary_kruskal_followup[[paste(colnames(metadata_clean[y]),colnames(metadata_clean[x]))]] = print(summarise(metadata_clean[metadata_clean$Visit == "Follow_up",], .by = colnames(metadata_clean[y]), x = mean(.data[[colnames(metadata_clean[x])]])))
+    }
+  }
+colnames(df_kruskal_followup) <- c("Categorical variable", "Numeric variable", "pvalue")
+lapply(summary_kruskal_followup, function(x) write.table(data.frame(x), 'Summary_mean_numeric_vs_categorical_followup.csv', append= T, sep=','))
+
+```
+
+```{r kendall_cortest_numeric}
+
+df_kendall = data.frame()
+for (y in c(5,13:47,49:72,75,76,81:87)) {
+  row <- metadata_clean[,y]
+  for (x in c(5,13:47,49:72,75,76,81:87)) {
+    col <- metadata_clean[,x]
+    df_kendall = rbind(df_kendall, c(print(colnames(metadata_clean[y])), print(colnames(metadata_clean[x])), print(cor.test(row, col, method = "kendall")$p.value), print(cor.test(row, col, method = "kendall")$estimate)))
+    }
+  }
+colnames(df_kendall) <- c("Variable 1", "Variable 2", "pvalue", "Correlation coefficient")
+
+```
+
+```{r kendall_cortest_timepoint}
+
+df_kendall_randomization = data.frame()
+for (y in c(5,13:47,49:72,75,76,81:87)) {
+  row <- metadata_clean[metadata_clean$Visit == "Randomization",y]
+  for (x in c(5,13:47,49:72,75,76,81:87)) {
+    col <- metadata_clean[metadata_clean$Visit == "Randomization",x]
+    df_kendall_randomization = rbind(df_kendall_randomization, c(print(colnames(metadata_clean[y])), print(colnames(metadata_clean[x])), print(cor.test(row, col, method = "kendall")$p.value), print(cor.test(row, col, method = "kendall")$estimate)))
+    }
+  }
+colnames(df_kendall_randomization) <- c("Variable 1", "Variable 2", "pvalue", "Correlation coefficient")
+
+df_kendall_discharge = data.frame()
+for (y in c(5,13:47,49:72,75,76,81:87)) {
+  row <- metadata_clean[metadata_clean$Visit == "Discharge",y]
+  for (x in c(5,13:47,49:72,75,76,81:87)) {
+    col <- metadata_clean[metadata_clean$Visit == "Discharge",x]
+    df_kendall_discharge = rbind(df_kendall_discharge, c(print(colnames(metadata_clean[y])), print(colnames(metadata_clean[x])), print(cor.test(row, col, method = "kendall")$p.value), print(cor.test(row, col, method = "kendall")$estimate)))
+    }
+  }
+colnames(df_kendall_discharge) <- c("Variable 1", "Variable 2", "pvalue", "Correlation coefficient")
+
+df_kendall_followup = data.frame()
+for (y in c(5,13:47,49:72,75,76,81:87)) {
+  row <- metadata_clean[metadata_clean$Visit == "Follow_up",y]
+  for (x in c(5,13:47,49:72,75,76,81:87)) {
+    col <- metadata_clean[metadata_clean$Visit == "Follow_up",x]
+    df_kendall_followup = rbind(df_kendall_followup, c(print(colnames(metadata_clean[y])), print(colnames(metadata_clean[x])), print(cor.test(row, col, method = "kendall")$p.value), print(cor.test(row, col, method = "kendall")$estimate)))
+    }
+  }
+colnames(df_kendall_followup) <- c("Variable 1", "Variable 2", "pvalue", "Correlation coefficient")
+
+```
+
+```{r chisq_loops}
+
+df_chisq = data.frame()
+for (y in c(3,4,6,7,73,74,77:80)) {
+  row <- metadata_clean[,y]
+  for (x in c(3,4,6,7,73,74,77:80)) {
+    col <- metadata_clean[,x]
+    df_chisq = rbind(df_chisq, c(print(colnames(metadata_clean[y])), print(colnames(metadata_clean[x])), print(chisq.test(t(table(col, row, exclude = "")))$p.value)))
+    }
+  }
+colnames(df_chisq) <- c("Variable1", "Variable2", "pvalue")
+
+```
+
+```{r correlation matrices AMR}
+
+RGPC_RGPC_species_discharge <- read.csv("~/RGPC_vs_RGPC_vs_species_discharge.csv", header = TRUE, row.names = 1, check.names = FALSE)
+
+heatmap_rgpc_discharge <- Heatmap(as.matrix(RGPC_RGPC_species_discharge), col = colorRamp2(c(-1,0,1), c("blue", "white", "red")), cluster_rows = FALSE, cluster_columns = FALSE, row_names_side = "left", name = "Kendall correlation")
+
+```
+
+```{r calculate beta diversity}
+
+species_betabray_resampled <- vegdist(species_clean_resampled, method = "bray")
+
+# write.csv(as.matrix(species_betabray_resampled), "~/R/PediCAP/micro_study_final/species_betabray.csv")
+
+#Selection of randomization samples
+
+species_clean_resampled_randomization <- merge(metadata_clean, species_clean_resampled, by = "row.names", all =TRUE)
+    rownames(species_clean_resampled_randomization) = species_clean_resampled_randomization$Row.names
+species_clean_resampled_randomization = species_clean_resampled_randomization[2:length(species_clean_resampled_randomization)]
+species_clean_resampled_randomization <- species_clean_resampled_randomization[species_clean_resampled_randomization$Visit == "Randomization",]
+    cols_to_drop = c(rep(FALSE, 87), colSums(species_clean_resampled_randomization[,88:ncol(species_clean_resampled_randomization)])>0)
+species_clean_resampled_randomization <- species_clean_resampled_randomization[,cols_to_drop]
+
+species_betabray_resampled_randomization <- vegdist(species_clean_resampled_randomization, method = "bray")
+
+```
+
+```{r pcoa raw_resampled bray}
+
+pcoa_species_bray_resampled <- cmdscale(species_betabray_resampled, k = 2, eig = T)
+pcoa_species_bray_resampled_plotting <- as.data.frame(pcoa_species_bray_resampled$points)
+colnames(pcoa_species_bray_resampled_plotting) <- c("axis_1", "axis_2")
+pcoa_species_bray_resampled_plotting$Country <- metadata_clean$Country
+pcoa_species_bray_resampled_plotting$Arm <- metadata_clean$Arm
+pcoa_species_bray_resampled_plotting$Visit <- metadata_clean$Visit
+
+centroids_country_visit <- aggregate(pcoa_species_bray_resampled_plotting, by = list(country_visit = paste(pcoa_species_bray_resampled_plotting$Country, pcoa_species_bray_resampled_plotting$Visit, sep = "_")), FUN = mean)
+centroids_country_visit[c("Country","Visit")] <- str_split_fixed(centroids_country_visit$country_visit, "_", 2)
+centroids_arm_visit <- aggregate(pcoa_species_bray_resampled_plotting, by = list(arm_visit = paste(pcoa_species_bray_resampled_plotting$Arm, pcoa_species_bray_resampled_plotting$Visit, sep = "_")), FUN = mean)
+centroids_arm_visit[c("Arm","Visit")] <- str_split_fixed(centroids_arm_visit$arm_visit, "_", 2)
+
+pcoa_species_bray_resampled$eig[1]/(sum(pcoa_species_bray_resampled$eig))
+pcoa_species_bray_resampled$eig[2]/(sum(pcoa_species_bray_resampled$eig))
+
+pcoa_species_bray_resampled_plotting$Visit <- factor(pcoa_species_bray_resampled_plotting$Visit, levels=c("Randomization", "Discharge", "Follow_up"))
+pcoa_species_bray_country_visit <- ggplot(pcoa_species_bray_resampled_plotting, aes(x = axis_1, y = axis_2, colour = Country, shape = Visit)) +
+  geom_point(size = 1) +
+  scale_color_manual(values = c("#332288", "#56B4E9", "#F0E442", "#CC79A7")) +
+  scale_shape_discrete(labels = c("Randomization", "Discharge", "Follow-up")) +
+  theme_bw() + 
+  xlab("PCoA 1 (16.3%)") +
+  ylab("PCoA 2 (8.6%)") +
+  labs(tag = "B") +
+  theme(text = element_text(size=12, face = "bold")) +
+  geom_point(data = centroids_country_visit, inherit.aes = FALSE, aes(x = axis_1, y = axis_2, colour = Country, shape = Visit, size = 10)) +
+  guides(size = "none")
+pcoa_species_bray_country_visit
+
+pcoa_species_bray_resampled_plotting$Visit <- factor(pcoa_species_bray_resampled_plotting$Visit, levels=c("Randomization", "Discharge", "Follow_up"))
+pcoa_species_bray_resampled_plotting$Arm <- factor(pcoa_species_bray_resampled_plotting$Arm, levels=c("IVonly/5", "Amoxicillin/4", "Amoxicillin/8", "Co-amox/4", "Co-amox/8"))
+pcoa_species_bray_arm_visit <- ggplot(pcoa_species_bray_resampled_plotting, aes(x = axis_1, y = axis_2, colour = Arm, shape = Visit)) +
+  geom_point(size = 1) +
+  scale_color_manual(labels = c("IV only", "Amoxicillin 4 days", "Amoxicillin 8 days", "Co-amoxiclav 4 days", "Co-amoxiclav 8 days"), values = c("#661100", "#E69F00", "#0072B2", "#009E73", "#D55E00")) +
+  scale_shape_discrete(labels = c("Randomization", "Discharge", "Follow-up")) +
+  theme_bw() + 
+  xlab("PCoA 1 (16.3%)") +
+  ylab("PCoA 2 (8.6%)") +
+  labs(tag = "A") +
+  theme(text = element_text(size=12, face = "bold")) +
+  geom_point(data = centroids_arm_visit, inherit.aes = FALSE, aes(x = axis_1, y = axis_2, colour = Arm, shape = Visit, size = 10)) +
+  guides(size = "none")
+pcoa_species_bray_arm_visit
+
+```
+
+```{r plot species diversity per visit}
+
+data_summary <- function(data, varname, groupnames){
+  require(plyr)
+  summary_func <- function(x, col){
+    c(mean = mean(x[[col]], na.rm=TRUE),
+      sd = sd(x[[col]], na.rm=TRUE))
+  }
+  data_sum<-ddply(data, groupnames, .fun=summary_func,
+                  varname)
+  data_sum <- rename(data_sum, c("mean" = varname))
+ return(data_sum)
+}
+
+metadata_clean$Visit <- factor(metadata_clean$Visit, levels=c("Randomization", "Discharge", "Follow_up"))
+metadata_clean$Arm <- factor(metadata_clean$Arm, levels=c("IVonly/5", "Amoxicillin/4", "Amoxicillin/8", "Co-amox/4", "Co-amox/8"))
+shannon_analysis <- data_summary(metadata_clean, varname = "shannon", groupnames = c("Visit", "Arm"))
+
+shannon_arm_visit <- ggplot(metadata_clean, aes(x = Visit, y = shannon)) +
+   geom_jitter(position = position_jitterdodge(jitter.width = 0), data = shannon_analysis, aes(color = Arm, size = 1), show.legend = FALSE) +
+   geom_point(position = position_jitterdodge(jitter.width = 0), aes(color = Arm, alpha = 0.5), show.legend = FALSE) +
+   geom_errorbar(position = position_jitterdodge(jitter.width = 0), data = shannon_analysis, aes(color = Arm, ymin = shannon+sd, ymax = shannon+sd), width = 0.15, show.legend = FALSE) +
+   geom_linerange(position = position_jitterdodge(jitter.width = 0), data = shannon_analysis, aes(color = Arm, ymin = shannon, ymax = shannon+sd), show.legend = FALSE) +
+   scale_x_discrete(labels = c("Randomization", "Discharge", "Follow up")) +
+   scale_color_manual(labels = c("IV only", "Amoxicillin 4 days", "Amoxicillin 8 days", "Co-amoxiclav 4 days", "Co-amoxiclav 8 days"), values = c("#661100", "#E69F00", "#0072B2", "#009E73", "#D55E00")) +
+   theme_bw() +
+   ylab("Shannon diversity index") +
+   xlab(NULL) +
+   guides(color = guide_legend(title = "Randomization arm"), size = "none") +
+   labs(tag = "A") +
+   theme(text = element_text(size = 18, face = "bold"))
+shannon_arm_visit
+
+pairwise.wilcox.test(metadata_clean$shannon, paste(metadata_clean$Arm, metadata_clean$Visit), p.adjust.method = "bonferroni")
+
+```
+
+```{r RGPC per visit and arm}
+
+data_summary <- function(data, varname, groupnames){
+  require(plyr)
+  summary_func <- function(x, col){
+    c(mean = mean(x[[col]], na.rm=TRUE),
+      sd = sd(x[[col]], na.rm=TRUE))
+  }
+  data_sum<-ddply(data, groupnames, .fun=summary_func,
+                  varname)
+  data_sum <- rename(data_sum, c("mean" = varname))
+ return(data_sum)
+}
+
+metadata_clean$Visit <- factor(metadata_clean$Visit, levels=c("Randomization", "Discharge", "Follow_up"))
+metadata_clean$Arm <- factor(metadata_clean$Arm, levels=c("IVonly/5", "Amoxicillin/4", "Amoxicillin/8", "Co-amox/4", "Co-amox/8"))
+# metadata_clean$log10RGPC <- log10(metadata_clean$Total_RGPC)
+RGPC_analysis <- data_summary(metadata_clean, varname = "Total_RGPC", groupnames = c("Visit", "Arm"))
+
+RGPC_arm_visit <- ggplot(metadata_clean, aes(x = Visit, y = Total_RGPC)) +
+   geom_jitter(position = position_jitterdodge(jitter.width = 0), data = RGPC_analysis, aes(color = Arm, size = 1)) +
+   geom_point(position = position_jitterdodge(jitter.width = 0), aes(color = Arm, alpha = 0.5), show.legend = FALSE) +
+   geom_errorbar(position = position_jitterdodge(jitter.width = 0), data = RGPC_analysis, aes(color = Arm, ymin = Total_RGPC+sd, ymax = Total_RGPC+sd), width = 0.15, show.legend = FALSE) +
+   geom_linerange(position = position_jitterdodge(jitter.width = 0), data = RGPC_analysis, aes(color = Arm, ymin = Total_RGPC, ymax = Total_RGPC+sd), show.legend = FALSE) +
+   scale_x_discrete(labels = c("Randomization", "Discharge", "Follow up")) +
+   scale_y_continuous(trans = "log", breaks = c(0, 1, 5, 10, 25, 50, 100, 150)) +
+   scale_color_manual(labels = c("IV only", "Amoxicillin 4 days", "Amoxicillin 8 days", "Co-amoxiclav 4 days", "Co-amoxiclav 8 days"), values = c("#661100", "#E69F00", "#0072B2", "#009E73", "#D55E00")) +
+   theme_bw() +
+   ylab("Total RGPC") +
+   xlab(NULL) +
+   guides(color = guide_legend(title = "Randomization arm"), size = "none") +
+   labs(tag = "B") +
+   theme(text = element_text(size = 18, face = "bold"))
+RGPC_arm_visit
+
+pairwise.wilcox.test(metadata_clean$Total_RGPC, paste(metadata_clean$Arm, metadata_clean$Visit), p.adjust.method = "bonferroni")
+
+```
+
+```{r beta-lactam_RGPC per visit and arm}
+
+data_summary <- function(data, varname, groupnames){
+  require(plyr)
+  summary_func <- function(x, col){
+    c(mean = mean(x[[col]], na.rm=TRUE),
+      sd = sd(x[[col]], na.rm=TRUE))
+  }
+  data_sum<-ddply(data, groupnames, .fun=summary_func,
+                  varname)
+  data_sum <- rename(data_sum, c("mean" = varname))
+ return(data_sum)
+}
+
+metadata_clean$Visit <- factor(metadata_clean$Visit, levels=c("Randomization", "Discharge", "Follow_up"))
+metadata_clean$Arm <- factor(metadata_clean$Arm, levels=c("IVonly/5", "Amoxicillin/4", "Amoxicillin/8", "Co-amox/4", "Co-amox/8"))
+blacRGPC_analysis <- data_summary(metadata_clean, varname = "beta_lactam_RGPC", groupnames = c("Visit", "Arm"))
+
+blacRGPC_arm_visit <- ggplot(metadata_clean, aes(x = Visit, y = beta_lactam_RGPC)) +
+   geom_jitter(position = position_jitterdodge(jitter.width = 0), data = blacRGPC_analysis, aes(color = Arm, size = 1), show.legend = FALSE) +
+   geom_point(position = position_jitterdodge(jitter.width = 0), aes(color = Arm, alpha = 0.5), show.legend = FALSE) +
+   geom_errorbar(position = position_jitterdodge(jitter.width = 0), data = blacRGPC_analysis, aes(color = Arm, ymin = beta_lactam_RGPC+sd, ymax = beta_lactam_RGPC+sd), width = 0.15, show.legend = FALSE) +
+   geom_linerange(position = position_jitterdodge(jitter.width = 0), data = blacRGPC_analysis, aes(color = Arm, ymin = beta_lactam_RGPC, ymax = beta_lactam_RGPC+sd), show.legend = FALSE) +
+   scale_x_discrete(labels = c("Randomization", "Discharge", "Follow up")) +
+   scale_color_manual(labels = c("IV only", "Amoxicillin 4 days", "Amoxicillin 8 days", "Co-amoxiclav 4 days", "Co-amoxiclav 8 days"), values = c("#661100", "#E69F00", "#0072B2", "#009E73", "#D55E00")) +
+   theme_bw() +
+   ylab("Beta-lactam RGPC") +
+   xlab(NULL) +
+   guides(color = guide_legend(title = "Randomization arm"), size = "none") +
+   labs(tag = "A") +
+   theme(text = element_text(size = 18, face = "bold"))
+blacRGPC_arm_visit
+
+pairwise.wilcox.test(metadata_clean$beta_lactam_RGPC, paste(metadata_clean$Arm, metadata_clean$Visit), p.adjust.method = "bonferroni")
+
+```
+
+```{r vancomycin_RGPC per visit and arm}
+
+data_summary <- function(data, varname, groupnames){
+  require(plyr)
+  summary_func <- function(x, col){
+    c(mean = mean(x[[col]], na.rm=TRUE),
+      sd = sd(x[[col]], na.rm=TRUE))
+  }
+  data_sum<-ddply(data, groupnames, .fun=summary_func,
+                  varname)
+  data_sum <- rename(data_sum, c("mean" = varname))
+ return(data_sum)
+}
+
+metadata_clean$Visit <- factor(metadata_clean$Visit, levels=c("Randomization", "Discharge", "Follow_up"))
+metadata_clean$Arm <- factor(metadata_clean$Arm, levels=c("IVonly/5", "Amoxicillin/4", "Amoxicillin/8", "Co-amox/4", "Co-amox/8"))
+vancoRGPC_analysis <- data_summary(metadata_clean, varname = "vancomycin_RGPC", groupnames = c("Visit", "Arm"))
+
+vancoRGPC_arm_visit <- ggplot(metadata_clean, aes(x = Visit, y = vancomycin_RGPC)) +
+   geom_jitter(position = position_jitterdodge(jitter.width = 0), data = vancoRGPC_analysis, aes(color = Arm, size = 1)) +
+   geom_point(position = position_jitterdodge(jitter.width = 0), aes(color = Arm, alpha = 0.5), show.legend = FALSE) +
+   geom_errorbar(position = position_jitterdodge(jitter.width = 0), data = vancoRGPC_analysis, aes(color = Arm, ymin = vancomycin_RGPC+sd, ymax = vancomycin_RGPC+sd), width = 0.15, show.legend = FALSE) +
+   geom_linerange(position = position_jitterdodge(jitter.width = 0), data = vancoRGPC_analysis, aes(color = Arm, ymin = vancomycin_RGPC, ymax = vancomycin_RGPC+sd), show.legend = FALSE) +
+   scale_x_discrete(labels = c("Randomization", "Discharge", "Follow up")) +
+   scale_color_manual(labels = c("IV only", "Amoxicillin 4 days", "Amoxicillin 8 days", "Co-amoxiclav 4 days", "Co-amoxiclav 8 days"), values = c("#661100", "#E69F00", "#0072B2", "#009E73", "#D55E00")) +
+   theme_bw() +
+   ylab("Vancomycin RGPC") +
+   xlab(NULL) +
+   guides(color = guide_legend(title = "Randomization arm"), size = "none") +
+   labs(tag = "B") +
+   theme(text = element_text(size = 18, face = "bold"))
+vancoRGPC_arm_visit
+
+pairwise.wilcox.test(metadata_clean$vancomycin_RGPC, paste(metadata_clean$Arm, metadata_clean$Visit), p.adjust.method = "bonferroni")
+
+```
+
+```{r generate_count_data_per_timepoint_deseq_ancom_maaslin}
+
+species_clean_QCok_metadata <- merge(metadata_clean, species_clean_QCok, by = "row.names", all =TRUE)
+    rownames(species_clean_QCok_metadata) = species_clean_QCok_metadata$Row.names
+species_clean_QCok_metadata = species_clean_QCok_metadata[2:length(species_clean_QCok_metadata)]
+
+species_clean_QCok_randomization <- species_clean_QCok_metadata[species_clean_QCok_metadata$Visit == "Randomization",]
+    cols_to_drop = c(rep(FALSE, 87), colSums(species_clean_QCok_randomization[,88:ncol(species_clean_QCok_randomization)])>0)
+species_clean_QCok_randomization <- species_clean_QCok_randomization[,cols_to_drop]
+
+species_clean_QCok_discharge <- species_clean_QCok_metadata[species_clean_QCok_metadata$Visit == "Discharge",]
+    cols_to_drop = c(rep(FALSE, 87), colSums(species_clean_QCok_discharge[,88:ncol(species_clean_QCok_discharge)])>0)
+species_clean_QCok_discharge <- species_clean_QCok_discharge[,cols_to_drop]
+
+species_clean_QCok_follow <- species_clean_QCok_metadata[species_clean_QCok_metadata$Visit == "Follow_up",]
+    cols_to_drop = c(rep(FALSE, 87), colSums(species_clean_QCok_follow[,88:ncol(species_clean_QCok_follow)])>0)
+species_clean_QCok_follow <- species_clean_QCok_follow[,cols_to_drop]
+
+```
+
+```{r deseq}
+
+# Generate dds matrices
+
+dds_visit <- DESeqDataSetFromMatrix(countData = t(species_clean_QCok), colData = as.data.frame(unclass(metadata_clean), stringsAsFactors = TRUE), design = ~ Visit + Country + Age + Arm)
+
+dds_country_randomization <- DESeqDataSetFromMatrix(countData = t(species_clean_QCok_randomization), colData = as.data.frame(unclass(metadata_clean[metadata_clean$Visit=="Randomization",]), stringsAsFactors = TRUE), design = ~ Country + Age)
+
+dds_arm_discharge <- DESeqDataSetFromMatrix(countData = t(species_clean_QCok_discharge), colData = as.data.frame(unclass(metadata_clean[metadata_clean$Visit=="Discharge",]), stringsAsFactors = TRUE), design = ~ Country + Age + Arm)
+
+dds_country_followup <- DESeqDataSetFromMatrix(countData = t(species_clean_QCok_follow), colData = as.data.frame(unclass(metadata_clean[metadata_clean$Visit=="Follow_up",]), stringsAsFactors = TRUE), design = ~ Country + Age + Arm)
+
+# Visit
+
+dds_visit$Visit <- relevel(dds_visit$Visit, "Randomization")
+dds_visit <- estimateSizeFactors(dds_visit, type = "poscounts")
+dds_visit <- DESeq(dds_visit)
+dds_visit_results_rand_discharge <- results(dds_visit, contrast = c("Visit", "Discharge", "Randomization"))
+dds_visit_results_rand_follow <- results(dds_visit, contrast = c("Visit", "Follow_up", "Randomization"))
+dds_visit_results_discharge_follow <- results(dds_visit, contrast = c("Visit", "Follow_up", "Discharge"))
+sum(dds_visit_results_rand_discharge$padj <0.1, na.rm = TRUE)
+sum(dds_visit_results_rand_follow$padj <0.1, na.rm = TRUE)
+sum(dds_visit_results_discharge_follow$padj <0.1, na.rm = TRUE)
+dds_visit_results_sig_rand_discharge <- dds_visit_results_rand_discharge[which(dds_visit_results_rand_discharge$padj < 0.1), ]
+dds_visit_results_sig_rand_follow <- dds_visit_results_rand_follow[which(dds_visit_results_rand_follow$padj < 0.1), ]
+dds_visit_results_sig_discharge_follow <- dds_visit_results_discharge_follow[which(dds_visit_results_discharge_follow$padj < 0.1), ]
+
+# Country randomization
+
+dds_country_randomization$Country <- relevel(dds_country_randomization$Country, "South Africa")
+dds_country_randomization <- estimateSizeFactors(dds_country_randomization, type = "poscounts")
+dds_country_randomization <- DESeq(dds_country_randomization)
+dds_country_randomization_results_SA_Uganda <- results(dds_country_randomization, contrast = c("Country", "Uganda", "South Africa"))
+dds_country_randomization_results_SA_Zambia <- results(dds_country_randomization, contrast = c("Country", "Zambia", "South Africa"))
+dds_country_randomization_results_SA_Zimbabwe <- results(dds_country_randomization, contrast = c("Country", "Zimbabwe", "South Africa"))
+dds_country_randomization_results_Uganda_Zambia <- results(dds_country_randomization, contrast = c("Country", "Zambia", "Uganda"))
+dds_country_randomization_results_Uganda_Zimbabwe <- results(dds_country_randomization, contrast = c("Country", "Zimbabwe", "Uganda"))
+dds_country_randomization_results_Zambia_Zimbabwe <- results(dds_country_randomization, contrast = c("Country", "Zimbabwe", "Zambia"))
+sum(dds_country_randomization_results_SA_Uganda$padj <0.1, na.rm = TRUE)
+sum(dds_country_randomization_results_SA_Zambia$padj <0.1, na.rm = TRUE)
+sum(dds_country_randomization_results_SA_Zimbabwe$padj <0.1, na.rm = TRUE)
+sum(dds_country_randomization_results_Uganda_Zambia$padj <0.1, na.rm = TRUE)
+sum(dds_country_randomization_results_Uganda_Zimbabwe$padj <0.1, na.rm = TRUE)
+sum(dds_country_randomization_results_Zambia_Zimbabwe$padj <0.1, na.rm = TRUE)
+dds_country_randomization_results_sig_SA_Uganda <- dds_country_randomization_results_SA_Uganda[which(dds_country_randomization_results_SA_Uganda$padj < 0.1), ]
+dds_country_randomization_results_sig_SA_Zambia <- dds_country_randomization_results_SA_Zambia[which(dds_country_randomization_results_SA_Zambia$padj < 0.1), ]
+dds_country_randomization_results_sig_SA_Zimbabwe <- dds_country_randomization_results_SA_Zimbabwe[which(dds_country_randomization_results_SA_Zimbabwe$padj < 0.1), ]
+dds_country_randomization_results_sig_Uganda_Zambia <- dds_country_randomization_results_Uganda_Zambia[which(dds_country_randomization_results_Uganda_Zambia$padj < 0.1), ]
+dds_country_randomization_results_sig_Uganda_Zimbabwe <- dds_country_randomization_results_Uganda_Zimbabwe[which(dds_country_randomization_results_Uganda_Zimbabwe$padj < 0.1), ]
+dds_country_randomization_results_sig_Zambia_Zimbabwe <- dds_country_randomization_results_Zambia_Zimbabwe[which(dds_country_randomization_results_Zambia_Zimbabwe$padj < 0.1), ]
+
+# Arm discharge
+
+dds_arm_discharge$Arm <- relevel(dds_arm_discharge$Arm, "IVonly/5")
+dds_arm_discharge <- estimateSizeFactors(dds_arm_discharge, type = "poscounts")
+dds_arm_discharge <- DESeq(dds_arm_discharge)
+dds_arm_discharge_results_IV_amox4 <- results(dds_arm_discharge, contrast = c("Arm", "Amoxicillin/4", "IVonly/5"))
+dds_arm_discharge_results_IV_amox8 <- results(dds_arm_discharge, contrast = c("Arm", "Amoxicillin/8", "IVonly/5"))
+dds_arm_discharge_results_IV_coamox4 <- results(dds_arm_discharge, contrast = c("Arm", "Co-amox/4", "IVonly/5"))
+dds_arm_discharge_results_IV_coamox8 <- results(dds_arm_discharge, contrast = c("Arm", "Co-amox/8", "IVonly/5"))
+sum(dds_arm_discharge_results_IV_amox4$padj <0.1, na.rm = TRUE)
+sum(dds_arm_discharge_results_IV_amox8$padj <0.1, na.rm = TRUE)
+sum(dds_arm_discharge_results_IV_coamox4$padj <0.1, na.rm = TRUE)
+sum(dds_arm_discharge_results_IV_coamox8$padj <0.1, na.rm = TRUE)
+dds_arm_discharge_results_sig_IV_amox4 <- dds_arm_discharge_results_IV_amox4[which(dds_arm_discharge_results_IV_amox4$padj < 0.1), ]
+dds_arm_discharge_results_sig_IV_amox8 <- dds_arm_discharge_results_IV_amox8[which(dds_arm_discharge_results_IV_amox8$padj < 0.1), ]
+dds_arm_discharge_results_sig_IV_coamox4 <- dds_arm_discharge_results_IV_coamox4[which(dds_arm_discharge_results_IV_coamox4$padj < 0.1), ]
+dds_arm_discharge_results_sig_IV_coamox8 <- dds_arm_discharge_results_IV_coamox8[which(dds_arm_discharge_results_IV_coamox8$padj < 0.1), ]
+
+# Country follow-up
+
+dds_country_followup$Country <- relevel(dds_country_followup$Country, "South Africa")
+dds_country_followup <- estimateSizeFactors(dds_country_followup, type = "poscounts")
+dds_country_followup <- DESeq(dds_country_followup)
+dds_country_followup_results_SA_Uganda <- results(dds_country_followup, contrast = c("Country", "Uganda", "South Africa"))
+dds_country_followup_results_SA_Zambia <- results(dds_country_followup, contrast = c("Country", "Zambia", "South Africa"))
+dds_country_followup_results_SA_Zimbabwe <- results(dds_country_followup, contrast = c("Country", "Zimbabwe", "South Africa"))
+dds_country_followup_results_Uganda_Zambia <- results(dds_country_followup, contrast = c("Country", "Zambia", "Uganda"))
+dds_country_followup_results_Uganda_Zimbabwe <- results(dds_country_followup, contrast = c("Country", "Zimbabwe", "Uganda"))
+dds_country_followup_results_Zambia_Zimbabwe <- results(dds_country_followup, contrast = c("Country", "Zimbabwe", "Zambia"))
+sum(dds_country_followup_results_SA_Uganda$padj <0.1, na.rm = TRUE)
+sum(dds_country_followup_results_SA_Zambia$padj <0.1, na.rm = TRUE)
+sum(dds_country_followup_results_SA_Zimbabwe$padj <0.1, na.rm = TRUE)
+sum(dds_country_followup_results_Uganda_Zambia$padj <0.1, na.rm = TRUE)
+sum(dds_country_followup_results_Uganda_Zimbabwe$padj <0.1, na.rm = TRUE)
+sum(dds_country_followup_results_Zambia_Zimbabwe$padj <0.1, na.rm = TRUE)
+dds_country_followup_results_sig_SA_Uganda <- dds_country_followup_results_SA_Uganda[which(dds_country_followup_results_SA_Uganda$padj < 0.1), ]
+dds_country_followup_results_sig_SA_Zambia <- dds_country_followup_results_SA_Zambia[which(dds_country_followup_results_SA_Zambia$padj < 0.1), ]
+dds_country_followup_results_sig_SA_Zimbabwe <- dds_country_followup_results_SA_Zimbabwe[which(dds_country_followup_results_SA_Zimbabwe$padj < 0.1), ]
+dds_country_followup_results_sig_Uganda_Zambia <- dds_country_followup_results_Uganda_Zambia[which(dds_country_followup_results_Uganda_Zambia$padj < 0.1), ]
+dds_country_followup_results_sig_Uganda_Zimbabwe <- dds_country_followup_results_Uganda_Zimbabwe[which(dds_country_followup_results_Uganda_Zimbabwe$padj < 0.1), ]
+dds_country_followup_results_sig_Zambia_Zimbabwe <- dds_country_followup_results_Zambia_Zimbabwe[which(dds_country_followup_results_Zambia_Zimbabwe$padj < 0.1), ]
+
+# write.csv(dds_arm_discharge_results_sig_IV_amox4, "~/deseq_discharge_IV_amox4.csv")
+# write.csv(dds_arm_discharge_results_sig_IV_amox8, "~/deseq_discharge_IV_amox8.csv")
+# write.csv(dds_arm_discharge_results_sig_IV_coamox4, "~/deseq_discharge_IV_coamox4.csv")
+# write.csv(dds_arm_discharge_results_sig_IV_coamox8, "~/deseq_discharge_IV_coamox8.csv")
+# write.csv(dds_country_randomization_results_sig_SA_Uganda, "~/deseq_randomization_SA_Uganda.csv")
+# write.csv(dds_country_randomization_results_sig_SA_Zambia, "~/deseq_randomization_SA_Zambia.csv")
+# write.csv(dds_country_randomization_results_sig_SA_Zimbabwe, "~/deseq_randomization_SA_Zimbabwe.csv")
+# write.csv(dds_country_randomization_results_sig_Uganda_Zambia, "~/deseq_randomization_Uganda_Zambia.csv")
+# write.csv(dds_country_randomization_results_sig_Uganda_Zimbabwe, "~/deseq_randomization_Uganda_Zimbabwe.csv")
+# write.csv(dds_country_randomization_results_sig_Zambia_Zimbabwe, "~/deseq_randomization_Zambia_Zimbabwe.csv")
+# write.csv(dds_visit_results_sig_rand_discharge, "~/deseq_randomization_discharge.csv")
+# write.csv(dds_visit_results_sig_rand_follow, "~/deseq_randomization_follow-up.csv")
+# write.csv(dds_visit_results_sig_discharge_follow, "~/deseq_discharge_follow-up.csv")
+# write.csv(dds_country_followup_results_sig_SA_Uganda, "~/deseq_followup_SA_Uganda.csv")
+# write.csv(dds_country_followup_results_sig_SA_Zambia, "~/deseq_followup_SA_Zambia.csv")
+# write.csv(dds_country_followup_results_sig_SA_Zimbabwe, "~/deseq_followup_SA_Zimbabwe.csv")
+# write.csv(dds_country_followup_results_sig_Uganda_Zambia, "~/deseq_followup_Uganda_Zambia.csv")
+# write.csv(dds_country_followup_results_sig_Uganda_Zimbabwe, "~/deseq_followup_Uganda_Zimbabwe.csv")
+# write.csv(dds_country_followup_results_sig_Zambia_Zimbabwe, "~/deseq_followup_Zambia_Zimbabwe.csv")
+
+```
+
+```{r ANCOM-BC2 general}
+
+ancom2 = ancombc2(data = t(species_clean_QCok), meta_data = metadata_clean, fix_formula = "Visit + Country + Age + Arm", pairwise = TRUE, group = "Visit")
+res_visit = ancom2$res_pair
+
+```
+
+```{r ANCOM-BC2 randomization}
+
+ancom2_rand = ancombc2(data = t(species_clean_QCok_randomization), meta_data = metadata_clean[metadata_clean$Visit == "Randomization",], fix_formula = "Country + Age", pairwise = TRUE, group = "Country")
+res_country_rand = ancom2_rand$res_pair
+
+```
+
+```{r ANCOM-BC2 discharge}
+
+ancom2_discharge = ancombc2(data = t(species_clean_QCok_discharge), meta_data = metadata_clean[metadata_clean$Visit == "Discharge",], fix_formula = "Country + Age + Arm", pairwise = TRUE, group = "Arm")
+res_arm_discharge = ancom2_discharge$res_pair
+
+```
+
+```{r ANCOM-BC2 follow-up}
+
+ancom2_follow = ancombc2(data = t(species_clean_QCok_follow), meta_data = metadata_clean[metadata_clean$Visit == "Follow_up",], fix_formula = "Country + Age + Arm", pairwise = TRUE, group = "Country")
+res_country_follow = ancom2_follow$res_pair
+
+```
+
+```{r MAASLIN general}
+
+metadata_clean$Visit <- as.factor(metadata_clean$Visit)
+metadata_clean$Country <- as.factor(metadata_clean$Country)
+metadata_clean$Arm <- as.factor(metadata_clean$Arm)
+maaslin_visit <- maaslin3(input_data = species_clean_QCok, input_metadata = metadata_clean, output = 'maaslin_visit', formula = '~ Visit + Country + Age + Arm + Classified_UHGG',  save_models = TRUE, plot_summary_plot = FALSE, plot_associations = FALSE,)
+
+contrast_mat <- matrix(c(1, 0, 0, 1, 0, -1, 0, 0, 1), ncol = 3, nrow = 3, byrow = TRUE)
+colnames(contrast_mat) <- c("VisitRandomization", "VisitDischarge", "VisitFollow_up")
+rownames(contrast_mat) <- c("Rand-dis", "Rand-fol", "Dis-fol")
+contrast_mat
+
+contrast_visit <- maaslin_contrast_test(maaslin3_fit = maaslin_visit, contrast_mat = contrast_mat)
+contrast_visit$fit_data_abundance$results
+
+```
+
+```{r MAASLIN randomization}
+
+maaslin_country_rand <- maaslin3(input_data = species_clean_QCok_randomization, input_metadata = metadata_clean, output = 'maaslin_country_rand', formula = '~ Country + Age + Classified_UHGG',  save_models = TRUE, plot_summary_plot = FALSE, plot_associations = FALSE,)
+
+contrast_mat <- matrix(c(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, -1, 0, 1, 0, -1, 0, 1, -1), ncol = 3, nrow = 6, byrow = TRUE)
+colnames(contrast_mat) <- c("CountryUganda", "CountryZambia", "CountryZimbabwe")
+rownames(contrast_mat) <- c("SA-Uganda", "SA-Zambia", "SA_Zimbabwe", "Uganda-Zambia", "UgandaZimbabwe", "Zambia-Zimbabwe")
+contrast_mat
+
+contrast_country_rand <- maaslin_contrast_test(maaslin3_fit = maaslin_country_rand, contrast_mat = contrast_mat)
+contrast_country_rand$fit_data_abundance$results
+
+```
+
+```{r MAASLIN discharge}
+
+maaslin_arm_discharge <- maaslin3(input_data = species_clean_QCok_discharge, input_metadata = metadata_clean, output = 'maaslin_arm_discharge', formula = '~ Country + Age + Arm + Classified_UHGG',  save_models = TRUE, plot_summary_plot = FALSE, plot_associations = FALSE,)
+
+contrast_mat <- matrix(c(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, -1, 0, 0, 1, 0, -1, 0, 1, 0, 0, -1, 0, 1, -1, 0, 0, 1, 0, -1, 0, 0, 1, -1), ncol = 4, nrow = 10, byrow = TRUE)
+colnames(contrast_mat) <- c("ArmAmoxicillin/8", "ArmCo-amox/4", "ArmCo-amox/8", "ArmIVonly/5")
+rownames(contrast_mat) <- c("Amox4-Amox8", "Amox4-Coamox4", "Amox4-Coamox8", "Amox4-IV", "Amox8-Coamox4", "Amox8-Coamox8", "Amox8-IV", "Coamox4-Coamox8", "Coamox4-IV", "Coamox8-IV")
+contrast_mat
+
+contrast_arm_discharge <- maaslin_contrast_test(maaslin3_fit = maaslin_arm_discharge, contrast_mat = contrast_mat)
+contrast_arm_discharge$fit_data_abundance$results
+
+```
+
+```{r MAASLIN follow-up}
+
+maaslin_country_follow <- maaslin3(input_data = species_clean_QCok_follow, input_metadata = metadata_clean, output = 'maaslin_country_follow', formula = '~ Country + Age + Arm + Classified_UHGG',  save_models = TRUE, plot_summary_plot = FALSE, plot_associations = FALSE,)
+
+contrast_mat <- matrix(c(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, -1, 0, 1, 0, -1, 0, 1, -1), ncol = 3, nrow = 6, byrow = TRUE)
+colnames(contrast_mat) <- c("CountryUganda", "CountryZambia", "CountryZimbabwe")
+rownames(contrast_mat) <- c("SA-Uganda", "SA-Zambia", "SA_Zimbabwe", "Uganda-Zambia", "UgandaZimbabwe", "Zambia-Zimbabwe")
+contrast_mat
+
+contrast_country_follow <- maaslin_contrast_test(maaslin3_fit = maaslin_country_follow, contrast_mat = contrast_mat)
+contrast_country_follow$fit_data_abundance$results
+
+```
+
+```{r diff_abundant_plots}
+
+diff_ab_analysis <- read.csv("~/differential_abundance_analysis.csv", header = TRUE)
+diff_ab_analysis_rand_dis <- diff_ab_analysis[diff_ab_analysis$Comparison == "Rand-dis",]
+diff_ab_analysis_rand_fol <- diff_ab_analysis[diff_ab_analysis$Comparison == "Rand-fol",]
+diff_ab_analysis_dis_fol <- diff_ab_analysis[diff_ab_analysis$Comparison == "Dis-fol",]
+
+diffab_rand_discharge_plot <- ggplot(diff_ab_analysis_rand_dis[diff_ab_analysis_rand_dis$DESeq2.mean.abundance > 3000,], aes(x = lfc, y = reorder(taxon, -lfc))) +
+   geom_bar(stat = "identity", colour = "black", fill = ifelse(diff_ab_analysis_rand_dis[diff_ab_analysis_rand_dis$DESeq2.mean.abundance > 3000,]$lfc > 0, "#E69F00", "#661100")) +
+   geom_errorbar(aes(xmin = lfc - se, xmax = lfc + se), width = 0.4, color = "black") +
+   geom_rect(data = data.frame(xmin = c(-Inf, 0), xmax = c(0, Inf), ymin = c(-Inf, -Inf), ymax = c(Inf, Inf), fill = c("#661100", "#E69F00")), aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = fill), inherit.aes = FALSE, alpha = .2, show.legend = FALSE) +
+  scale_fill_manual(values = c("#661100" = "#661100", "#E69F00" = "#E69F00", guide = "none")) +
+  geom_vline(xintercept = 0) +
+  theme_bw() +
+  theme(legend.position = "bottom", text = element_text(size = 12, face = "bold"), axis.text.y = element_text(size = 14, face = "bold.italic")) +
+  labs(tag = "A") +
+  xlab(label = "log2 fold change") +
+  ylab(label = NULL)
+diffab_rand_discharge_plot
+
+diffab_rand_follow_plot <- ggplot(diff_ab_analysis_rand_fol[diff_ab_analysis_rand_fol$DESeq2.mean.abundance > 3000,], aes(x = lfc, y = reorder(taxon, -lfc))) +
+   geom_bar(stat = "identity", colour = "black", fill = ifelse(diff_ab_analysis_rand_fol[diff_ab_analysis_rand_fol$DESeq2.mean.abundance > 3000,]$lfc > 0, "#0072B2", "#661100")) +
+   geom_errorbar(aes(xmin = lfc - se, xmax = lfc + se), width = 0.4, color = "black") +
+   geom_rect(data = data.frame(xmin = c(-Inf, 0), xmax = c(0, Inf), ymin = c(-Inf, -Inf), ymax = c(Inf, Inf), fill = c("#661100", "#0072B2")), aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = fill), inherit.aes = FALSE, alpha = .2, show.legend = FALSE) +
+  scale_fill_manual(values = c("#661100" = "#661100", "#0072B2" = "#0072B2", guide = "none")) +
+  geom_vline(xintercept = 0) +
+  theme_bw() +
+  theme(legend.position = "bottom", text = element_text(size = 12, face = "bold"), axis.text.y = element_text(size = 14, face = "bold.italic")) +
+  labs(tag = "B") +
+  xlab(label = "log2 fold change") +
+  ylab(label = NULL)
+diffab_rand_follow_plot
+
+diffab_follow_discharge_plot <- ggplot(diff_ab_analysis_dis_fol[diff_ab_analysis_dis_fol$DESeq2.mean.abundance > 3000,], aes(x = lfc, y = reorder(taxon, -lfc))) +
+   geom_bar(stat = "identity", colour = "black", fill = ifelse(diff_ab_analysis_dis_fol[diff_ab_analysis_dis_fol$DESeq2.mean.abundance > 3000,]$lfc > 0, "#0072B2", "#E69F00")) +
+   geom_errorbar(aes(xmin = lfc - se, xmax = lfc + se), width = 0.4, color = "black") +
+   geom_rect(data = data.frame(xmin = c(-Inf, 0), xmax = c(0, Inf), ymin = c(-Inf, -Inf), ymax = c(Inf, Inf), fill = c("#E69F00", "#0072B2")), aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = fill), inherit.aes = FALSE, alpha = .2, show.legend = FALSE) +
+  scale_fill_manual(values = c("#E69F00" = "#E69F00", "#0072B2" = "#0072B2", guide = "none")) +
+  geom_vline(xintercept = 0) +
+  theme_bw() +
+  theme(legend.position = "bottom", text = element_text(size = 12, face = "bold"), axis.text.y = element_text(size = 14, face = "bold.italic")) +
+  labs(tag = "C") +
+  xlab(label = "log2 fold change") +
+  ylab(label = NULL)
+diffab_follow_discharge_plot
+
+diffab_sa_ug_plot <- ggplot(diff_ab_analysis[diff_ab_analysis$Comparison == "SA-Uganda",], aes(x = lfc, y = reorder(taxon, -lfc))) +
+   geom_bar(stat = "identity", colour = "black", fill = ifelse(diff_ab_analysis[diff_ab_analysis$Comparison == "SA-Uganda",]$lfc > 0, "#56B4E9", "#332288")) +
+   geom_errorbar(aes(xmin = lfc - se, xmax = lfc + se), width = 0.4, color = "black") +
+   geom_rect(data = data.frame(xmin = c(-Inf, 0), xmax = c(0, Inf), ymin = c(-Inf, -Inf), ymax = c(Inf, Inf), fill = c("#332288", "#56B4E9")), aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = fill), inherit.aes = FALSE, alpha = .2, show.legend = FALSE) +
+  scale_fill_manual(values = c("#332288" = "#332288", "#56B4E9" = "#56B4E9", guide = "none")) +
+  geom_vline(xintercept = 0) +
+  theme_bw() +
+  theme(legend.position = "bottom", text = element_text(size = 12, face = "bold"), axis.text.y = element_text(size = 14, face = "bold.italic")) +
+  labs(tag = "A") +
+  xlab(label = "log2 fold change") +
+  ylab(label = NULL)
+diffab_sa_ug_plot
+
+diffab_sa_za_plot <- ggplot(diff_ab_analysis[diff_ab_analysis$Comparison == "SA-Zambia",], aes(x = lfc, y = reorder(taxon, -lfc))) +
+   geom_bar(stat = "identity", colour = "black", fill = ifelse(diff_ab_analysis[diff_ab_analysis$Comparison == "SA-Zambia",]$lfc > 0, "#F0E442", "#332288")) +
+   geom_errorbar(aes(xmin = lfc - se, xmax = lfc + se), width = 0.4, color = "black") +
+   geom_rect(data = data.frame(xmin = c(-Inf, 0), xmax = c(0, Inf), ymin = c(-Inf, -Inf), ymax = c(Inf, Inf), fill = c("#332288", "#F0E442")), aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = fill), inherit.aes = FALSE, alpha = .2, show.legend = FALSE) +
+  scale_fill_manual(values = c("#332288" = "#332288", "#F0E442" = "#F0E442", guide = "none")) +
+  geom_vline(xintercept = 0) +
+  xlim(-3,2) +
+  theme_bw() +
+  theme(legend.position = "bottom", text = element_text(size = 12, face = "bold"), axis.text.y = element_text(size = 14, face = "bold.italic")) +
+  labs(tag = "B") +
+  xlab(label = "log2 fold change") +
+  ylab(label = NULL)
+diffab_sa_za_plot
+
+diffab_sa_zi_plot <- ggplot(diff_ab_analysis[diff_ab_analysis$Comparison == "SA-Zimbabwe",], aes(x = lfc, y = reorder(taxon, -lfc))) +
+   geom_bar(stat = "identity", colour = "black", fill = ifelse(diff_ab_analysis[diff_ab_analysis$Comparison == "SA-Zimbabwe",]$lfc > 0, "#CC79A7", "#332288")) +
+   geom_errorbar(aes(xmin = lfc - se, xmax = lfc + se), width = 0.4, color = "black") +
+   geom_rect(data = data.frame(xmin = c(-Inf, 0), xmax = c(0, Inf), ymin = c(-Inf, -Inf), ymax = c(Inf, Inf), fill = c("#332288", "#CC79A7")), aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = fill), inherit.aes = FALSE, alpha = .2, show.legend = FALSE) +
+  scale_fill_manual(values = c("#332288" = "#332288", "#CC79A7" = "#CC79A7", guide = "none")) +
+  geom_vline(xintercept = 0) +
+  theme_bw() +
+  theme(legend.position = "bottom", text = element_text(size = 12, face = "bold"), axis.text.y = element_text(size = 14, face = "bold.italic")) +
+  labs(tag = "C") +
+  xlab(label = "log2 fold change") +
+  ylab(label = NULL)
+diffab_sa_zi_plot
+
+diffab_ug_za_plot <- ggplot(diff_ab_analysis[diff_ab_analysis$Comparison == "Uganda-Zambia",], aes(x = lfc, y = reorder(taxon, -lfc))) +
+   geom_bar(stat = "identity", colour = "black", fill = ifelse(diff_ab_analysis[diff_ab_analysis$Comparison == "Uganda-Zambia",]$lfc > 0, "#F0E442", "#56B4E9")) +
+   geom_errorbar(aes(xmin = lfc - se, xmax = lfc + se), width = 0.4, color = "black") +
+   geom_rect(data = data.frame(xmin = c(-Inf, 0), xmax = c(0, Inf), ymin = c(-Inf, -Inf), ymax = c(Inf, Inf), fill = c("#56B4E9", "#F0E442")), aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = fill), inherit.aes = FALSE, alpha = .2, show.legend = FALSE) +
+  scale_fill_manual(values = c("#56B4E9" = "#56B4E9", "#F0E442" = "#F0E442", guide = "none")) +
+  geom_vline(xintercept = 0) +
+  theme_bw() +
+  theme(legend.position = "bottom", text = element_text(size = 12, face = "bold"), axis.text.y = element_text(size = 14, face = "bold.italic")) +
+  labs(tag = "D") +
+  xlab(label = "log2 fold change") +
+  ylab(label = NULL)
+diffab_ug_za_plot
+
+diffab_ug_zi_plot <- ggplot(diff_ab_analysis[diff_ab_analysis$Comparison == "Uganda-Zimbabwe",], aes(x = lfc, y = reorder(taxon, -lfc))) +
+   geom_bar(stat = "identity", colour = "black", fill = ifelse(diff_ab_analysis[diff_ab_analysis$Comparison == "Uganda-Zimbabwe",]$lfc > 0, "#CC79A7", "#56B4E9")) +
+   geom_errorbar(aes(xmin = lfc - se, xmax = lfc + se), width = 0.4, color = "black") +
+   geom_rect(data = data.frame(xmin = c(-Inf, 0), xmax = c(0, Inf), ymin = c(-Inf, -Inf), ymax = c(Inf, Inf), fill = c("#56B4E9", "#CC79A7")), aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = fill), inherit.aes = FALSE, alpha = .2, show.legend = FALSE) +
+  scale_fill_manual(values = c("#56B4E9" = "#56B4E9", "#CC79A7" = "#CC79A7", guide = "none")) +
+  geom_vline(xintercept = 0) +
+  theme_bw() +
+  theme(legend.position = "bottom", text = element_text(size = 12, face = "bold"), axis.text.y = element_text(size = 14, face = "bold.italic")) +
+  labs(tag = "E") +
+  xlab(label = "log2 fold change") +
+  ylab(label = NULL)
+diffab_ug_zi_plot
+
+diffab_za_zi_plot <- ggplot(diff_ab_analysis[diff_ab_analysis$Comparison == "Zambia-Zimbabwe",], aes(x = lfc, y = reorder(taxon, -lfc))) +
+   geom_bar(stat = "identity", colour = "black", fill = ifelse(diff_ab_analysis[diff_ab_analysis$Comparison == "Zambia-Zimbabwe",]$lfc > 0, "#CC79A7", "#F0E442")) +
+   geom_errorbar(aes(xmin = lfc - se, xmax = lfc + se), width = 0.4, color = "black") +
+   geom_rect(data = data.frame(xmin = c(-Inf, 0), xmax = c(0, Inf), ymin = c(-Inf, -Inf), ymax = c(Inf, Inf), fill = c("#F0E442", "#CC79A7")), aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = fill), inherit.aes = FALSE, alpha = .2, show.legend = FALSE) +
+  scale_fill_manual(values = c("#F0E442" = "#F0E442", "#CC79A7" = "#CC79A7", guide = "none")) +
+  geom_vline(xintercept = 0) +
+  theme_bw() +
+  theme(legend.position = "bottom", text = element_text(size = 12, face = "bold"), axis.text.y = element_text(size = 14, face = "bold.italic")) +
+  labs(tag = "F") +
+  xlab(label = "log2 fold change") +
+  ylab(label = NULL)
+diffab_za_zi_plot
+
+```
+
+```{r clinical data table}
+
+metadata_models %>%
+  select(Country, Arm, Age, Sex, CRPResult, DeliveryMode, MUAC4agez, OxygenYN, abxbeforefirstIV, IntravenousTreat, Hospital_time, Dur_IV_base, Dur_IV_dis, Dur_oral_dis, Dur_oral_fol, Non.trial_AB_dis, Days_last_AB_fol, Baseline_sample, Base.dis_sample, Base.fol_sample, X3_samples) %>%
+  tbl_summary(by = Arm, missing = "no") %>%
+  add_p() %>%
+  add_n() %>%
+  add_overall() %>%
+  bold_labels() %>%
+  as_gt() %>%
+  gt::gtsave("clinical_data_table_arm_patients.docx")
+
+metadata_models %>%
+  select(Country, Arm, Age, Sex, CRPResult, DeliveryMode, MUAC4agez, OxygenYN, abxbeforefirstIV, IntravenousTreat, Hospital_time, Dur_IV_base, Dur_IV_dis, Dur_oral_dis, Dur_oral_fol, Non.trial_AB_dis, Days_last_AB_fol, Baseline_sample, Base.dis_sample, Base.fol_sample, X3_samples) %>%
+  tbl_summary(by = Country, missing = "no") %>%
+  add_p() %>%
+  add_n() %>%
+  add_overall() %>%
+  bold_labels() %>%
+  as_gt() %>%
+  gt::gtsave("clinical_data_table_country_patients.docx")
+
+```
+
+```{r baseline_variables_shannon_backwards}
+
+##All
+
+lm_shannon_baseline_back <- lm(shannon_baseline ~ Country + Age + Sex + CRPResult + DeliveryMode + MUAC4agez + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_IV_base, metadata_models)
+summary(lm_shannon_baseline_back)
+anova(lm_shannon_baseline_back, test = "Chisq")
+
+##Minus Duration IV baseline
+
+lm_shannon_baseline_back2 <- lm(shannon_baseline ~ Country + Age + Sex + CRPResult + DeliveryMode + MUAC4agez + OxygenYN + abxbeforefirstIV + IntravenousTreat, metadata_models)
+summary(lm_shannon_baseline_back2)
+anova(lm_shannon_baseline_back2, test = "Chisq")
+
+##Minus Ab before
+
+lm_shannon_baseline_back3 <- lm(shannon_baseline ~ Country + Age + Sex + CRPResult + DeliveryMode + MUAC4agez + OxygenYN + IntravenousTreat, metadata_models)
+summary(lm_shannon_baseline_back3)
+anova(lm_shannon_baseline_back3, test = "Chisq")
+
+##Minus Oxygen
+
+lm_shannon_baseline_back4 <- lm(shannon_baseline ~ Country + Age + Sex + CRPResult + DeliveryMode + MUAC4agez + IntravenousTreat, metadata_models)
+summary(lm_shannon_baseline_back4)
+anova(lm_shannon_baseline_back4, test = "Chisq")
+
+##Minus delivery mode
+
+lm_shannon_baseline_back5 <- lm(shannon_baseline ~ Country + Age + Sex + CRPResult + MUAC4agez + IntravenousTreat, metadata_models)
+summary(lm_shannon_baseline_back5)
+anova(lm_shannon_baseline_back5, test = "Chisq")
+
+##Minus initial IV
+
+lm_shannon_baseline_back6 <- lm(shannon_baseline ~ Country + Age + Sex + CRPResult+ MUAC4agez, metadata_models)
+summary(lm_shannon_baseline_back6)
+anova(lm_shannon_baseline_back6, test = "Chisq")
+
+##Minus CRP
+
+lm_shannon_baseline_back7 <- lm(shannon_baseline ~ Country + Age + Sex + MUAC4agez, metadata_models)
+summary(lm_shannon_baseline_back7)
+anova(lm_shannon_baseline_back7, test = "Chisq")
+
+##Minus MUAC
+
+lm_shannon_baseline_backfinal <- lm(shannon_baseline ~ Country + Age + Sex, metadata_models)
+summary(lm_shannon_baseline_backfinal)
+anova(lm_shannon_baseline_backfinal, test = "Chisq")
+
+##All
+
+lm_shannon_baseline_backfinalint <- lm(shannon_baseline ~ Country * Age * Sex, metadata_models)
+summary(lm_shannon_baseline_backfinalint)
+anova(lm_shannon_baseline_backfinalint, test = "Chisq")
+
+```
+
+```{r baseline_variables_RGPC_backwards}
+
+##All
+
+lm_RGPC_baseline_back <- lm(log10RGPC_baseline ~ Country + Age + Sex + CRPResult + DeliveryMode + MUAC4agez + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_IV_base, metadata_models)
+summary(lm_RGPC_baseline_back)
+anova(lm_RGPC_baseline_back, test = "Chisq")
+
+##Minus MUAC
+
+lm_RGPC_baseline_back2 <- lm(log10RGPC_baseline ~ Country + Age + Sex + CRPResult + DeliveryMode + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_IV_base, metadata_models)
+summary(lm_RGPC_baseline_back2)
+anova(lm_RGPC_baseline_back2, test = "Chisq")
+
+##Minus CRP
+
+lm_RGPC_baseline_back3 <- lm(log10RGPC_baseline ~ Country + Age + Sex+ DeliveryMode + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_IV_base, metadata_models)
+summary(lm_RGPC_baseline_back3)
+anova(lm_RGPC_baseline_back3, test = "Chisq")
+
+##Minus delivery mode
+
+lm_RGPC_baseline_back4 <- lm(log10RGPC_baseline ~ Country + Age + Sex + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_IV_base, metadata_models)
+summary(lm_RGPC_baseline_back4)
+anova(lm_RGPC_baseline_back4, test = "Chisq")
+
+##Minus duration IV
+
+lm_RGPC_baseline_back5 <- lm(log10RGPC_baseline ~ Country + Age + Sex + OxygenYN + abxbeforefirstIV + IntravenousTreat, metadata_models)
+summary(lm_RGPC_baseline_back5)
+anova(lm_RGPC_baseline_back5, test = "Chisq")
+
+##Minus ab before
+
+lm_RGPC_baseline_back6 <- lm(log10RGPC_baseline ~ Country + Age + Sex + OxygenYN + IntravenousTreat, metadata_models)
+summary(lm_RGPC_baseline_back6)
+anova(lm_RGPC_baseline_back6, test = "Chisq")
+
+##Minus initial IV
+
+lm_RGPC_baseline_back7 <- lm(log10RGPC_baseline ~ Country + Age + Sex + OxygenYN, metadata_models)
+summary(lm_RGPC_baseline_back7)
+anova(lm_RGPC_baseline_back7, test = "Chisq")
+
+##Minus Sex
+
+lm_RGPC_baseline_back8 <- lm(log10RGPC_baseline ~ Country + Age + OxygenYN, metadata_models)
+summary(lm_RGPC_baseline_back8)
+anova(lm_RGPC_baseline_back8, test = "Chisq")
+
+##Minus Oxygen
+
+lm_RGPC_baseline_backfinal <- lm(log10RGPC_baseline ~ Country + Age, metadata_models)
+summary(lm_RGPC_baseline_backfinal)
+anova(lm_RGPC_baseline_backfinal, test = "Chisq")
+
+```
+
+```{r dis.base_variables_shannon_backwards}
+
+##All
+
+lm_shannon_dis.base_back <- lm(shannon_dis.base ~ Country + shannon_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + CRPResult + DeliveryMode + MUAC4agez + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_IV_dis + Dur_oral_dis + Hospital_time + Non.trial_AB_dis, metadata_models)
+summary(lm_shannon_dis.base_back)
+anova(lm_shannon_dis.base_back, test = "Chisq")
+
+##Minus Duration IV dis
+
+lm_shannon_dis.base_back2 <- lm(shannon_dis.base ~ Country + shannon_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + CRPResult + DeliveryMode + MUAC4agez + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_oral_dis + Hospital_time + Non.trial_AB_dis, metadata_models)
+summary(lm_shannon_dis.base_back2)
+anova(lm_shannon_dis.base_back2, test = "Chisq")
+
+##Minus Oxygen
+
+lm_shannon_dis.base_back3 <- lm(shannon_dis.base ~ Country + shannon_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + CRPResult + DeliveryMode + MUAC4agez + abxbeforefirstIV + IntravenousTreat + Dur_oral_dis + Hospital_time + Non.trial_AB_dis, metadata_models)
+summary(lm_shannon_dis.base_back3)
+anova(lm_shannon_dis.base_back3, test = "Chisq")
+
+##Minus Hospital time
+
+lm_shannon_dis.base_back4 <- lm(shannon_dis.base ~ Country + shannon_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + CRPResult + DeliveryMode + MUAC4agez + abxbeforefirstIV + IntravenousTreat + Dur_oral_dis + Non.trial_AB_dis, metadata_models)
+summary(lm_shannon_dis.base_back4)
+anova(lm_shannon_dis.base_back4, test = "Chisq")
+
+##Minus delivery mode
+
+lm_shannon_dis.base_back5 <- lm(shannon_dis.base ~ Country + shannon_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + CRPResult + MUAC4agez + abxbeforefirstIV + IntravenousTreat + Dur_oral_dis + Non.trial_AB_dis, metadata_models)
+summary(lm_shannon_dis.base_back5)
+anova(lm_shannon_dis.base_back5, test = "Chisq")
+
+##Minus initial IV
+
+lm_shannon_dis.base_back6 <- lm(shannon_dis.base ~ Country + shannon_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + CRPResult + MUAC4agez + abxbeforefirstIV + Dur_oral_dis + Non.trial_AB_dis, metadata_models)
+summary(lm_shannon_dis.base_back6)
+anova(lm_shannon_dis.base_back6, test = "Chisq")
+
+##Minus Sex
+
+lm_shannon_dis.base_back7 <- lm(shannon_dis.base ~ Country + shannon_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + CRPResult + MUAC4agez + abxbeforefirstIV + Dur_oral_dis + Non.trial_AB_dis, metadata_models)
+summary(lm_shannon_dis.base_back7)
+anova(lm_shannon_dis.base_back7, test = "Chisq")
+
+##Minus CRP
+
+lm_shannon_dis.base_back8 <- lm(shannon_dis.base ~ Country + shannon_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + MUAC4agez + abxbeforefirstIV + Dur_oral_dis + Non.trial_AB_dis, metadata_models)
+summary(lm_shannon_dis.base_back8)
+anova(lm_shannon_dis.base_back8, test = "Chisq")
+
+##Minus Non-trial ab
+
+lm_shannon_dis.base_back9 <- lm(shannon_dis.base ~ Country + shannon_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + MUAC4agez + abxbeforefirstIV + Dur_oral_dis, metadata_models)
+summary(lm_shannon_dis.base_back9)
+anova(lm_shannon_dis.base_back9, test = "Chisq")
+
+##Minus duration oral
+
+lm_shannon_dis.base_back10 <- lm(shannon_dis.base ~ Country + shannon_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + MUAC4agez + abxbeforefirstIV, metadata_models)
+summary(lm_shannon_dis.base_back10)
+anova(lm_shannon_dis.base_back10, test = "Chisq")
+
+##Minus MUAC
+
+lm_shannon_dis.base_backfinal <- lm(shannon_dis.base ~ Country + shannon_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + abxbeforefirstIV, metadata_models)
+summary(lm_shannon_dis.base_backfinal)
+anova(lm_shannon_dis.base_backfinal, test = "Chisq")
+
+```
+
+```{r dis.base_variables_RGPC_backwards}
+
+##All
+
+lm_RGPC_dis.base_back <- lm(log10RGPC_dis.base ~ Country + log10RGPC_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + CRPResult + DeliveryMode + MUAC4agez + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_IV_dis + Dur_oral_dis + Hospital_time + Non.trial_AB_dis, metadata_models)
+summary(lm_RGPC_dis.base_back)
+anova(lm_RGPC_dis.base_back, test = "Chisq")
+
+##Minus Initial IV
+
+lm_RGPC_dis.base_back2 <- lm(log10RGPC_dis.base ~ Country + log10RGPC_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + CRPResult + DeliveryMode + MUAC4agez + OxygenYN + abxbeforefirstIV + Dur_IV_dis + Dur_oral_dis + Hospital_time + Non.trial_AB_dis, metadata_models)
+summary(lm_RGPC_dis.base_back2)
+anova(lm_RGPC_dis.base_back2, test = "Chisq")
+
+##Minus CRP
+
+lm_RGPC_dis.base_back3 <- lm(log10RGPC_dis.base ~ Country + log10RGPC_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + DeliveryMode + MUAC4agez + OxygenYN + abxbeforefirstIV + Dur_IV_dis + Dur_oral_dis + Hospital_time + Non.trial_AB_dis, metadata_models)
+summary(lm_RGPC_dis.base_back3)
+anova(lm_RGPC_dis.base_back3, test = "Chisq")
+
+##Minus delivery mode
+
+lm_RGPC_dis.base_back4 <- lm(log10RGPC_dis.base ~ Country + log10RGPC_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + MUAC4agez + OxygenYN + abxbeforefirstIV + Dur_IV_dis + Dur_oral_dis + Hospital_time + Non.trial_AB_dis, metadata_models)
+summary(lm_RGPC_dis.base_back4)
+anova(lm_RGPC_dis.base_back4, test = "Chisq")
+
+##Minus Duration oral
+
+lm_RGPC_dis.base_back5 <- lm(log10RGPC_dis.base ~ Country + log10RGPC_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + MUAC4agez + OxygenYN + abxbeforefirstIV + Dur_IV_dis + Hospital_time + Non.trial_AB_dis, metadata_models)
+summary(lm_RGPC_dis.base_back5)
+anova(lm_RGPC_dis.base_back5, test = "Chisq")
+
+##Minus Duration IV
+
+lm_RGPC_dis.base_back6 <- lm(log10RGPC_dis.base ~ Country + log10RGPC_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + MUAC4agez + OxygenYN + abxbeforefirstIV + Hospital_time + Non.trial_AB_dis, metadata_models)
+summary(lm_RGPC_dis.base_back6)
+anova(lm_RGPC_dis.base_back6, test = "Chisq")
+
+##Minus Oxygen
+
+lm_RGPC_dis.base_back7 <- lm(log10RGPC_dis.base ~ Country + log10RGPC_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + MUAC4agez + abxbeforefirstIV + Hospital_time + Non.trial_AB_dis, metadata_models)
+summary(lm_RGPC_dis.base_back7)
+anova(lm_RGPC_dis.base_back7, test = "Chisq")
+
+##Minus MUAC
+
+lm_RGPC_dis.base_back8 <- lm(log10RGPC_dis.base ~ Country + log10RGPC_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + abxbeforefirstIV + Hospital_time + Non.trial_AB_dis, metadata_models)
+summary(lm_RGPC_dis.base_back8)
+anova(lm_RGPC_dis.base_back8, test = "Chisq")
+
+##Minus Hospital time
+
+lm_RGPC_dis.base_back9 <- lm(log10RGPC_dis.base ~ Country + log10RGPC_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + abxbeforefirstIV + Non.trial_AB_dis, metadata_models)
+summary(lm_RGPC_dis.base_back9)
+anova(lm_RGPC_dis.base_back9, test = "Chisq")
+
+##Minus Ab before
+
+lm_RGPC_dis.base_backfinal <- lm(log10RGPC_dis.base ~ Country + log10RGPC_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + Non.trial_AB_dis, metadata_models)
+summary(lm_RGPC_dis.base_backfinal)
+anova(lm_RGPC_dis.base_backfinal, test = "Chisq")
+
+```
+
+```{r fol.base_variables_shannon_backwards}
+
+##All
+
+lm_shannon_fol.base_back <- lm(shannon_fol.base ~ Country + shannon_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + CRPResult + DeliveryMode + MUAC4agez + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_IV_fol + Dur_oral_fol + Hospital_time + Non.trial_AB_dis + Days_last_AB_fol, metadata_models)
+summary(lm_shannon_fol.base_back)
+anova(lm_shannon_fol.base_back, test = "Chisq")
+
+##Minus Delivery mode
+
+lm_shannon_fol.base_back2 <- lm(shannon_fol.base ~ Country + shannon_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + CRPResult + MUAC4agez + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_IV_fol + Dur_oral_fol + Hospital_time + Non.trial_AB_dis + Days_last_AB_fol, metadata_models)
+summary(lm_shannon_fol.base_back2)
+anova(lm_shannon_fol.base_back2, test = "Chisq")
+
+##Minus CRP
+
+lm_shannon_fol.base_back3 <- lm(shannon_fol.base ~ Country + shannon_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + MUAC4agez + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_IV_fol + Dur_oral_fol + Hospital_time + Non.trial_AB_dis + Days_last_AB_fol, metadata_models)
+summary(lm_shannon_fol.base_back3)
+anova(lm_shannon_fol.base_back3, test = "Chisq")
+
+##Minus Hospital time
+
+lm_shannon_fol.base_back4 <- lm(shannon_fol.base ~ Country + shannon_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + MUAC4agez + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_IV_fol + Dur_oral_fol + Non.trial_AB_dis + Days_last_AB_fol, metadata_models)
+summary(lm_shannon_fol.base_back4)
+anova(lm_shannon_fol.base_back4, test = "Chisq")
+
+##Minus MUAC
+
+lm_shannon_fol.base_back5 <- lm(shannon_fol.base ~ Country + shannon_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_IV_fol + Dur_oral_fol + Non.trial_AB_dis + Days_last_AB_fol, metadata_models)
+summary(lm_shannon_fol.base_back5)
+anova(lm_shannon_fol.base_back5, test = "Chisq")
+
+##Minus Duration IV
+
+lm_shannon_fol.base_back6 <- lm(shannon_fol.base ~ Country + shannon_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_oral_fol + Non.trial_AB_dis + Days_last_AB_fol, metadata_models)
+summary(lm_shannon_fol.base_back6)
+anova(lm_shannon_fol.base_back6, test = "Chisq")
+
+##Minus Non-trial AB
+
+lm_shannon_fol.base_back7 <- lm(shannon_fol.base ~ Country + shannon_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_oral_fol + Days_last_AB_fol, metadata_models)
+summary(lm_shannon_fol.base_back7)
+anova(lm_shannon_fol.base_back7, test = "Chisq")
+
+##Minus Duration oral follow-up
+
+lm_shannon_fol.base_back8 <- lm(shannon_fol.base ~ Country + shannon_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + OxygenYN + abxbeforefirstIV + IntravenousTreat + Days_last_AB_fol, metadata_models)
+summary(lm_shannon_fol.base_back8)
+anova(lm_shannon_fol.base_back8, test = "Chisq")
+
+##Minus Oxygen
+
+lm_shannon_fol.base_back9 <- lm(shannon_fol.base ~ Country + shannon_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + abxbeforefirstIV + IntravenousTreat + Days_last_AB_fol, metadata_models)
+summary(lm_shannon_fol.base_back9)
+anova(lm_shannon_fol.base_back9, test = "Chisq")
+
+##Minus AB before
+
+lm_shannon_fol.base_back10 <- lm(shannon_fol.base ~ Country + shannon_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + IntravenousTreat + Days_last_AB_fol, metadata_models)
+summary(lm_shannon_fol.base_back10)
+anova(lm_shannon_fol.base_back10, test = "Chisq")
+
+##Minus Initial IV
+
+lm_shannon_fol.base_backfinal <- lm(shannon_fol.base ~ Country + shannon_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + Days_last_AB_fol, metadata_models)
+summary(lm_shannon_fol.base_backfinal)
+anova(lm_shannon_fol.base_backfinal, test = "Chisq")
+
+```
+
+```{r fol.base_variables_RGPC_backwards}
+
+##All
+
+lm_RGPC_fol.base_back <- lm(log10RGPC_fol.base ~ Country + log10RGPC_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + CRPResult + DeliveryMode + MUAC4agez + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_IV_fol + Dur_oral_fol + Hospital_time + Non.trial_AB_dis + Days_last_AB_fol, metadata_models)
+summary(lm_RGPC_fol.base_back)
+anova(lm_RGPC_fol.base_back, test = "Chisq")
+
+##Minus CRP
+
+lm_RGPC_fol.base_back2 <- lm(log10RGPC_fol.base ~ Country + log10RGPC_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + DeliveryMode + MUAC4agez + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_IV_fol + Dur_oral_fol + Hospital_time + Non.trial_AB_dis + Days_last_AB_fol, metadata_models)
+summary(lm_RGPC_fol.base_back2)
+anova(lm_RGPC_fol.base_back2, test = "Chisq")
+
+##Minus MUAC
+
+lm_RGPC_fol.base_back3 <- lm(log10RGPC_fol.base ~ Country + log10RGPC_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + DeliveryMode + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_IV_fol + Dur_oral_fol + Hospital_time + Non.trial_AB_dis + Days_last_AB_fol, metadata_models)
+summary(lm_RGPC_fol.base_back3)
+anova(lm_RGPC_fol.base_back3, test = "Chisq")
+
+##Minus Sex
+
+lm_RGPC_fol.base_back4 <- lm(log10RGPC_fol.base ~ Country + log10RGPC_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + DeliveryMode + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_IV_fol + Dur_oral_fol + Hospital_time + Non.trial_AB_dis + Days_last_AB_fol, metadata_models)
+summary(lm_RGPC_fol.base_back4)
+anova(lm_RGPC_fol.base_back4, test = "Chisq")
+
+##Minus Delivery mode
+
+lm_RGPC_fol.base_back5 <- lm(log10RGPC_fol.base ~ Country + log10RGPC_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_IV_fol + Dur_oral_fol + Hospital_time + Non.trial_AB_dis + Days_last_AB_fol, metadata_models)
+summary(lm_RGPC_fol.base_back5)
+anova(lm_RGPC_fol.base_back5, test = "Chisq")
+
+##Minus Ab before
+
+lm_RGPC_fol.base_back6 <- lm(log10RGPC_fol.base ~ Country + log10RGPC_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + OxygenYN + IntravenousTreat + Dur_IV_fol + Dur_oral_fol + Hospital_time + Non.trial_AB_dis + Days_last_AB_fol, metadata_models)
+summary(lm_RGPC_fol.base_back6)
+anova(lm_RGPC_fol.base_back6, test = "Chisq")
+
+##Minus Hospital time
+
+lm_RGPC_fol.base_back7 <- lm(log10RGPC_fol.base ~ Country + log10RGPC_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + OxygenYN + IntravenousTreat + Dur_IV_fol + Dur_oral_fol + Non.trial_AB_dis + Days_last_AB_fol, metadata_models)
+summary(lm_RGPC_fol.base_back7)
+anova(lm_RGPC_fol.base_back7, test = "Chisq")
+
+##Minus Days last AB
+
+lm_RGPC_fol.base_back8 <- lm(log10RGPC_fol.base ~ Country + log10RGPC_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + OxygenYN + IntravenousTreat + Dur_IV_fol + Dur_oral_fol + Non.trial_AB_dis, metadata_models)
+summary(lm_RGPC_fol.base_back8)
+anova(lm_RGPC_fol.base_back8, test = "Chisq")
+
+##Minus Non-trial AB
+
+lm_RGPC_fol.base_back9 <- lm(log10RGPC_fol.base ~ Country + log10RGPC_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + OxygenYN + IntravenousTreat + Dur_IV_fol + Dur_oral_fol, metadata_models)
+summary(lm_RGPC_fol.base_back9)
+anova(lm_RGPC_fol.base_back9, test = "Chisq")
+
+##Minus Oxygen
+
+lm_RGPC_fol.base_backfinal <- lm(log10RGPC_fol.base ~ Country + log10RGPC_baseline + IVonly_factorial + Drug_factorial + Duration_factorial + Age + IntravenousTreat + Dur_IV_fol + Dur_oral_fol, metadata_models)
+summary(lm_RGPC_fol.base_backfinal)
+anova(lm_RGPC_fol.base_backfinal, test = "Chisq")
+
+```
+
+```{r dbRDA metadata}
+
+metadata_z <- metadata_clean
+metadata_z_randomization <- metadata_z[metadata_z$Visit == "Randomization",]
+
+metadata_z_randomization$Age <- (metadata_z_randomization$Age - mean(metadata_z_randomization$Age))/sd(metadata_z_randomization$Age)
+metadata_z_randomization$Dur_IV_base <- (metadata_z_randomization$Dur_IV_base - mean(metadata_z_randomization$Dur_IV_base))/sd(metadata_z_randomization$Dur_IV_base)
+
+```
+
+```{r dbRDA randomization}
+
+dbRDA_randomization_back1 <- capscale(species_betabray_resampled_randomization ~ Country + Age + Sex + CRPResult + DeliveryMode + MUAC4agez + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_IV_base, metadata_z_randomization, na.action = na.omit)
+anova(dbRDA_randomization_back1, by = "terms")
+
+#Minus delivery mode
+
+dbRDA_randomization_back2 <- capscale(species_betabray_resampled_randomization ~ Country + Age + Sex + CRPResult + MUAC4agez + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_IV_base, metadata_z_randomization, na.action = na.omit)
+anova(dbRDA_randomization_back2, by = "terms")
+
+#Minus CRP
+
+dbRDA_randomization_back3 <- capscale(species_betabray_resampled_randomization ~ Country + Age + Sex + MUAC4agez + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_IV_base, metadata_z_randomization, na.action = na.omit)
+anova(dbRDA_randomization_back3, by = "terms")
+
+#Minus IV treatment
+
+dbRDA_randomization_back4 <- capscale(species_betabray_resampled_randomization ~ Country + Age + Sex + MUAC4agez + OxygenYN + abxbeforefirstIV + Dur_IV_base, metadata_z_randomization, na.action = na.omit)
+anova(dbRDA_randomization_back4, by = "terms")
+
+#Minus duration IV
+
+dbRDA_randomization_back5 <- capscale(species_betabray_resampled_randomization ~ Country + Age + Sex + MUAC4agez + OxygenYN + abxbeforefirstIV, metadata_z_randomization, na.action = na.omit)
+anova(dbRDA_randomization_back5, by = "terms")
+
+#Minus ab before IV
+
+dbRDA_randomization_back6 <- capscale(species_betabray_resampled_randomization ~ Country + Age + Sex + MUAC4agez + OxygenYN, metadata_z_randomization, na.action = na.omit)
+anova(dbRDA_randomization_back6, by = "terms")
+
+#Minus Oxygen
+
+dbRDA_randomization_back7 <- capscale(species_betabray_resampled_randomization ~ Country + Age + Sex + MUAC4agez, metadata_z_randomization, na.action = na.omit)
+anova(dbRDA_randomization_back7, by = "terms")
+
+#Minus MUAC
+
+dbRDA_randomization_backfinal <- capscale(species_betabray_resampled_randomization ~ Country + Age + Sex, metadata_z_randomization)
+vif.cca(dbRDA_randomization_backfinal)
+anova(dbRDA_randomization_backfinal)
+anova(dbRDA_randomization_backfinal, by = "terms")
+
+```
+
+```{r dis.base_variables_Beta_backwards}
+
+##All
+
+betareg_dis.base_back <- betareg(Beta_dis.base ~ Country + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + CRPResult + DeliveryMode + MUAC4agez + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_IV_dis + Dur_oral_dis + Hospital_time + Non.trial_AB_dis, metadata_models)
+summary(betareg_dis.base_back)
+regTermTest(betareg_dis.base_back, "Country")
+regTermTest(betareg_dis.base_back, "IVonly_factorial")
+regTermTest(betareg_dis.base_back, "Drug_factorial")
+regTermTest(betareg_dis.base_back, "Duration_factorial")
+regTermTest(betareg_dis.base_back, "IVonly_factorial + Drug_factorial + Duration_factorial")
+regTermTest(betareg_dis.base_back, "Age")
+regTermTest(betareg_dis.base_back, "Sex")
+regTermTest(betareg_dis.base_back, "CRPResult")
+regTermTest(betareg_dis.base_back, "DeliveryMode")
+regTermTest(betareg_dis.base_back, "MUAC4agez")
+regTermTest(betareg_dis.base_back, "OxygenYN")
+regTermTest(betareg_dis.base_back, "abxbeforefirstIV")
+regTermTest(betareg_dis.base_back, "IntravenousTreat")
+regTermTest(betareg_dis.base_back, "Dur_IV_dis")
+regTermTest(betareg_dis.base_back, "Dur_oral_dis")
+regTermTest(betareg_dis.base_back, "Hospital_time")
+regTermTest(betareg_dis.base_back, "Non.trial_AB_dis")
+
+##Minus Hospital time
+
+betareg_dis.base_back2 <- betareg(Beta_dis.base ~ Country + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + CRPResult + DeliveryMode + MUAC4agez + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_IV_dis + Dur_oral_dis + Non.trial_AB_dis, metadata_models)
+summary(betareg_dis.base_back2)
+regTermTest(betareg_dis.base_back2, "Country")
+regTermTest(betareg_dis.base_back2, "IVonly_factorial")
+regTermTest(betareg_dis.base_back2, "Drug_factorial")
+regTermTest(betareg_dis.base_back2, "Duration_factorial")
+regTermTest(betareg_dis.base_back2, "IVonly_factorial + Drug_factorial + Duration_factorial")
+regTermTest(betareg_dis.base_back2, "Age")
+regTermTest(betareg_dis.base_back2, "Sex")
+regTermTest(betareg_dis.base_back2, "CRPResult")
+regTermTest(betareg_dis.base_back2, "DeliveryMode")
+regTermTest(betareg_dis.base_back2, "MUAC4agez")
+regTermTest(betareg_dis.base_back2, "OxygenYN")
+regTermTest(betareg_dis.base_back2, "abxbeforefirstIV")
+regTermTest(betareg_dis.base_back2, "IntravenousTreat")
+regTermTest(betareg_dis.base_back2, "Dur_IV_dis")
+regTermTest(betareg_dis.base_back2, "Dur_oral_dis")
+regTermTest(betareg_dis.base_back2, "Non.trial_AB_dis")
+
+##Minus Duration IV
+
+betareg_dis.base_back3 <- betareg(Beta_dis.base ~ Country + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + CRPResult + DeliveryMode + MUAC4agez + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_oral_dis + Non.trial_AB_dis, metadata_models)
+summary(betareg_dis.base_back3)
+regTermTest(betareg_dis.base_back3, "Country")
+regTermTest(betareg_dis.base_back3, "IVonly_factorial")
+regTermTest(betareg_dis.base_back3, "Drug_factorial")
+regTermTest(betareg_dis.base_back3, "Duration_factorial")
+regTermTest(betareg_dis.base_back3, "IVonly_factorial + Drug_factorial + Duration_factorial")
+regTermTest(betareg_dis.base_back3, "Age")
+regTermTest(betareg_dis.base_back3, "Sex")
+regTermTest(betareg_dis.base_back3, "CRPResult")
+regTermTest(betareg_dis.base_back3, "DeliveryMode")
+regTermTest(betareg_dis.base_back3, "MUAC4agez")
+regTermTest(betareg_dis.base_back3, "OxygenYN")
+regTermTest(betareg_dis.base_back3, "abxbeforefirstIV")
+regTermTest(betareg_dis.base_back3, "IntravenousTreat")
+regTermTest(betareg_dis.base_back3, "Dur_oral_dis")
+regTermTest(betareg_dis.base_back3, "Non.trial_AB_dis")
+
+##Minus Age
+
+betareg_dis.base_back4 <- betareg(Beta_dis.base ~ Country + IVonly_factorial + Drug_factorial + Duration_factorial + Sex + CRPResult + DeliveryMode + MUAC4agez + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_oral_dis + Non.trial_AB_dis, metadata_models)
+summary(betareg_dis.base_back4)
+regTermTest(betareg_dis.base_back4, "Country")
+regTermTest(betareg_dis.base_back4, "IVonly_factorial")
+regTermTest(betareg_dis.base_back4, "Drug_factorial")
+regTermTest(betareg_dis.base_back4, "Duration_factorial")
+regTermTest(betareg_dis.base_back4, "IVonly_factorial + Drug_factorial + Duration_factorial")
+regTermTest(betareg_dis.base_back4, "Sex")
+regTermTest(betareg_dis.base_back4, "CRPResult")
+regTermTest(betareg_dis.base_back4, "DeliveryMode")
+regTermTest(betareg_dis.base_back4, "MUAC4agez")
+regTermTest(betareg_dis.base_back4, "OxygenYN")
+regTermTest(betareg_dis.base_back4, "abxbeforefirstIV")
+regTermTest(betareg_dis.base_back4, "IntravenousTreat")
+regTermTest(betareg_dis.base_back4, "Dur_oral_dis")
+regTermTest(betareg_dis.base_back4, "Non.trial_AB_dis")
+
+##Minus non-trial AB
+
+betareg_dis.base_back5 <- betareg(Beta_dis.base ~ Country + IVonly_factorial + Drug_factorial + Duration_factorial + Sex + CRPResult + DeliveryMode + MUAC4agez + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_oral_dis, metadata_models)
+summary(betareg_dis.base_back5)
+regTermTest(betareg_dis.base_back5, "Country")
+regTermTest(betareg_dis.base_back5, "IVonly_factorial")
+regTermTest(betareg_dis.base_back5, "Drug_factorial")
+regTermTest(betareg_dis.base_back5, "Duration_factorial")
+regTermTest(betareg_dis.base_back5, "IVonly_factorial + Drug_factorial + Duration_factorial")
+regTermTest(betareg_dis.base_back5, "Sex")
+regTermTest(betareg_dis.base_back5, "CRPResult")
+regTermTest(betareg_dis.base_back5, "DeliveryMode")
+regTermTest(betareg_dis.base_back5, "MUAC4agez")
+regTermTest(betareg_dis.base_back5, "OxygenYN")
+regTermTest(betareg_dis.base_back5, "abxbeforefirstIV")
+regTermTest(betareg_dis.base_back5, "IntravenousTreat")
+regTermTest(betareg_dis.base_back5, "Dur_oral_dis")
+
+##Minus CRP result
+
+betareg_dis.base_back6 <- betareg(Beta_dis.base ~ Country + IVonly_factorial + Drug_factorial + Duration_factorial + Sex + DeliveryMode + MUAC4agez + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_oral_dis, metadata_models)
+summary(betareg_dis.base_back6)
+regTermTest(betareg_dis.base_back6, "Country")
+regTermTest(betareg_dis.base_back6, "IVonly_factorial")
+regTermTest(betareg_dis.base_back6, "Drug_factorial")
+regTermTest(betareg_dis.base_back6, "Duration_factorial")
+regTermTest(betareg_dis.base_back6, "IVonly_factorial + Drug_factorial + Duration_factorial")
+regTermTest(betareg_dis.base_back6, "Sex")
+regTermTest(betareg_dis.base_back6, "DeliveryMode")
+regTermTest(betareg_dis.base_back6, "MUAC4agez")
+regTermTest(betareg_dis.base_back6, "OxygenYN")
+regTermTest(betareg_dis.base_back6, "abxbeforefirstIV")
+regTermTest(betareg_dis.base_back6, "IntravenousTreat")
+regTermTest(betareg_dis.base_back6, "Dur_oral_dis")
+
+##Minus Delivery mode
+
+betareg_dis.base_back7 <- betareg(Beta_dis.base ~ Country + IVonly_factorial + Drug_factorial + Duration_factorial + Sex + MUAC4agez + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_oral_dis, metadata_models)
+summary(betareg_dis.base_back7)
+regTermTest(betareg_dis.base_back7, "Country")
+regTermTest(betareg_dis.base_back7, "IVonly_factorial")
+regTermTest(betareg_dis.base_back7, "Drug_factorial")
+regTermTest(betareg_dis.base_back7, "Duration_factorial")
+regTermTest(betareg_dis.base_back7, "IVonly_factorial + Drug_factorial + Duration_factorial")
+regTermTest(betareg_dis.base_back7, "Sex")
+regTermTest(betareg_dis.base_back7, "MUAC4agez")
+regTermTest(betareg_dis.base_back7, "OxygenYN")
+regTermTest(betareg_dis.base_back7, "abxbeforefirstIV")
+regTermTest(betareg_dis.base_back7, "IntravenousTreat")
+regTermTest(betareg_dis.base_back7, "Dur_oral_dis")
+
+##Minus Initial IV
+
+betareg_dis.base_back8 <- betareg(Beta_dis.base ~ Country + IVonly_factorial + Drug_factorial + Duration_factorial + Sex + MUAC4agez + OxygenYN + abxbeforefirstIV + Dur_oral_dis, metadata_models)
+summary(betareg_dis.base_back8)
+regTermTest(betareg_dis.base_back8, "Country")
+regTermTest(betareg_dis.base_back8, "IVonly_factorial")
+regTermTest(betareg_dis.base_back8, "Drug_factorial")
+regTermTest(betareg_dis.base_back8, "Duration_factorial")
+regTermTest(betareg_dis.base_back8, "IVonly_factorial + Drug_factorial + Duration_factorial")
+regTermTest(betareg_dis.base_back8, "Sex")
+regTermTest(betareg_dis.base_back8, "MUAC4agez")
+regTermTest(betareg_dis.base_back8, "OxygenYN")
+regTermTest(betareg_dis.base_back8, "abxbeforefirstIV")
+regTermTest(betareg_dis.base_back8, "Dur_oral_dis")
+
+##Minus Ab before
+
+betareg_dis.base_backfinal <- betareg(Beta_dis.base ~ Country + IVonly_factorial + Drug_factorial + Duration_factorial + Sex + MUAC4agez + OxygenYN + Dur_oral_dis, metadata_models)
+summary(betareg_dis.base_backfinal)
+regTermTest(betareg_dis.base_backfinal, "Country")
+regTermTest(betareg_dis.base_backfinal, "IVonly_factorial")
+regTermTest(betareg_dis.base_backfinal, "Drug_factorial")
+regTermTest(betareg_dis.base_backfinal, "Duration_factorial")
+regTermTest(betareg_dis.base_backfinal, "IVonly_factorial + Drug_factorial + Duration_factorial")
+regTermTest(betareg_dis.base_backfinal, "Sex")
+regTermTest(betareg_dis.base_backfinal, "MUAC4agez")
+regTermTest(betareg_dis.base_backfinal, "OxygenYN")
+regTermTest(betareg_dis.base_backfinal, "Dur_oral_dis")
+
+```
+
+```{r fol.base_variables_Beta_backwards}
+
+##All
+
+betareg_fol.base_back <- betareg(Beta_fol.base ~ Country + IVonly_factorial + Drug_factorial + Duration_factorial + Age + Sex + CRPResult + DeliveryMode + MUAC4agez + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_IV_fol + Dur_oral_fol + Hospital_time + Non.trial_AB_dis + Days_last_AB_fol, metadata_models)
+summary(betareg_fol.base_back)
+regTermTest(betareg_fol.base_back, "Country")
+regTermTest(betareg_fol.base_back, "IVonly_factorial")
+regTermTest(betareg_fol.base_back, "Drug_factorial")
+regTermTest(betareg_fol.base_back, "Duration_factorial")
+regTermTest(betareg_fol.base_back, "IVonly_factorial + Drug_factorial + Duration_factorial")
+regTermTest(betareg_fol.base_back, "Age")
+regTermTest(betareg_fol.base_back, "Sex")
+regTermTest(betareg_fol.base_back, "CRPResult")
+regTermTest(betareg_fol.base_back, "DeliveryMode")
+regTermTest(betareg_fol.base_back, "MUAC4agez")
+regTermTest(betareg_fol.base_back, "OxygenYN")
+regTermTest(betareg_fol.base_back, "abxbeforefirstIV")
+regTermTest(betareg_fol.base_back, "IntravenousTreat")
+regTermTest(betareg_fol.base_back, "Dur_IV_fol")
+regTermTest(betareg_fol.base_back, "Dur_oral_fol")
+regTermTest(betareg_fol.base_back, "Hospital_time")
+regTermTest(betareg_fol.base_back, "Non.trial_AB_dis")
+regTermTest(betareg_fol.base_back, "Days_last_AB_fol")
+
+##Minus Sex
+
+betareg_fol.base_back2 <- betareg(Beta_fol.base ~ Country + IVonly_factorial + Drug_factorial + Duration_factorial + Age + CRPResult + DeliveryMode + MUAC4agez + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_IV_fol + Dur_oral_fol + Hospital_time + Non.trial_AB_dis + Days_last_AB_fol, metadata_models)
+summary(betareg_fol.base_back2)
+regTermTest(betareg_fol.base_back2, "Country")
+regTermTest(betareg_fol.base_back2, "IVonly_factorial")
+regTermTest(betareg_fol.base_back2, "Drug_factorial")
+regTermTest(betareg_fol.base_back2, "Duration_factorial")
+regTermTest(betareg_fol.base_back2, "IVonly_factorial + Drug_factorial + Duration_factorial")
+regTermTest(betareg_fol.base_back2, "Age")
+regTermTest(betareg_fol.base_back2, "CRPResult")
+regTermTest(betareg_fol.base_back2, "DeliveryMode")
+regTermTest(betareg_fol.base_back2, "MUAC4agez")
+regTermTest(betareg_fol.base_back2, "OxygenYN")
+regTermTest(betareg_fol.base_back2, "abxbeforefirstIV")
+regTermTest(betareg_fol.base_back2, "IntravenousTreat")
+regTermTest(betareg_fol.base_back2, "Dur_IV_fol")
+regTermTest(betareg_fol.base_back2, "Dur_oral_fol")
+regTermTest(betareg_fol.base_back2, "Hospital_time")
+regTermTest(betareg_fol.base_back2, "Non.trial_AB_dis")
+regTermTest(betareg_fol.base_back2, "Days_last_AB_fol")
+
+##Minus Duration oral
+
+betareg_fol.base_back3 <- betareg(Beta_fol.base ~ Country + IVonly_factorial + Drug_factorial + Duration_factorial + Age + CRPResult + DeliveryMode + MUAC4agez + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_IV_fol + Hospital_time + Non.trial_AB_dis + Days_last_AB_fol, metadata_models)
+summary(betareg_fol.base_back3)
+regTermTest(betareg_fol.base_back3, "Country")
+regTermTest(betareg_fol.base_back3, "IVonly_factorial")
+regTermTest(betareg_fol.base_back3, "Drug_factorial")
+regTermTest(betareg_fol.base_back3, "Duration_factorial")
+regTermTest(betareg_fol.base_back3, "IVonly_factorial + Drug_factorial + Duration_factorial")
+regTermTest(betareg_fol.base_back3, "Age")
+regTermTest(betareg_fol.base_back3, "CRPResult")
+regTermTest(betareg_fol.base_back3, "DeliveryMode")
+regTermTest(betareg_fol.base_back3, "MUAC4agez")
+regTermTest(betareg_fol.base_back3, "OxygenYN")
+regTermTest(betareg_fol.base_back3, "abxbeforefirstIV")
+regTermTest(betareg_fol.base_back3, "IntravenousTreat")
+regTermTest(betareg_fol.base_back3, "Dur_IV_fol")
+regTermTest(betareg_fol.base_back3, "Hospital_time")
+regTermTest(betareg_fol.base_back3, "Non.trial_AB_dis")
+regTermTest(betareg_fol.base_back3, "Days_last_AB_fol")
+
+##Minus Days last AB
+
+betareg_fol.base_back4 <- betareg(Beta_fol.base ~ Country + IVonly_factorial + Drug_factorial + Duration_factorial + Age + CRPResult + DeliveryMode + MUAC4agez + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_IV_fol + Hospital_time + Non.trial_AB_dis, metadata_models)
+summary(betareg_fol.base_back4)
+regTermTest(betareg_fol.base_back4, "Country")
+regTermTest(betareg_fol.base_back4, "IVonly_factorial")
+regTermTest(betareg_fol.base_back4, "Drug_factorial")
+regTermTest(betareg_fol.base_back4, "Duration_factorial")
+regTermTest(betareg_fol.base_back4, "IVonly_factorial + Drug_factorial + Duration_factorial")
+regTermTest(betareg_fol.base_back4, "Age")
+regTermTest(betareg_fol.base_back4, "CRPResult")
+regTermTest(betareg_fol.base_back4, "DeliveryMode")
+regTermTest(betareg_fol.base_back4, "MUAC4agez")
+regTermTest(betareg_fol.base_back4, "OxygenYN")
+regTermTest(betareg_fol.base_back4, "abxbeforefirstIV")
+regTermTest(betareg_fol.base_back4, "IntravenousTreat")
+regTermTest(betareg_fol.base_back4, "Dur_IV_fol")
+regTermTest(betareg_fol.base_back4, "Hospital_time")
+regTermTest(betareg_fol.base_back4, "Non.trial_AB_dis")
+
+##Minus non trial AB
+
+betareg_fol.base_back5 <- betareg(Beta_fol.base ~ Country + IVonly_factorial + Drug_factorial + Duration_factorial + Age + CRPResult + DeliveryMode + MUAC4agez + OxygenYN + abxbeforefirstIV + IntravenousTreat + Dur_IV_fol + Hospital_time, metadata_models)
+summary(betareg_fol.base_back5)
+regTermTest(betareg_fol.base_back5, "Country")
+regTermTest(betareg_fol.base_back5, "IVonly_factorial")
+regTermTest(betareg_fol.base_back5, "Drug_factorial")
+regTermTest(betareg_fol.base_back5, "Duration_factorial")
+regTermTest(betareg_fol.base_back5, "IVonly_factorial + Drug_factorial + Duration_factorial")
+regTermTest(betareg_fol.base_back5, "Age")
+regTermTest(betareg_fol.base_back5, "CRPResult")
+regTermTest(betareg_fol.base_back5, "DeliveryMode")
+regTermTest(betareg_fol.base_back5, "MUAC4agez")
+regTermTest(betareg_fol.base_back5, "OxygenYN")
+regTermTest(betareg_fol.base_back5, "abxbeforefirstIV")
+regTermTest(betareg_fol.base_back5, "IntravenousTreat")
+regTermTest(betareg_fol.base_back5, "Dur_IV_fol")
+regTermTest(betareg_fol.base_back5, "Hospital_time")
+
+##Minus initial IV
+
+betareg_fol.base_back6 <- betareg(Beta_fol.base ~ Country + IVonly_factorial + Drug_factorial + Duration_factorial + Age + CRPResult + DeliveryMode + MUAC4agez + OxygenYN + abxbeforefirstIV + Dur_IV_fol + Hospital_time, metadata_models)
+summary(betareg_fol.base_back6)
+regTermTest(betareg_fol.base_back6, "Country")
+regTermTest(betareg_fol.base_back6, "IVonly_factorial")
+regTermTest(betareg_fol.base_back6, "Drug_factorial")
+regTermTest(betareg_fol.base_back6, "Duration_factorial")
+regTermTest(betareg_fol.base_back6, "IVonly_factorial + Drug_factorial + Duration_factorial")
+regTermTest(betareg_fol.base_back6, "Age")
+regTermTest(betareg_fol.base_back6, "CRPResult")
+regTermTest(betareg_fol.base_back6, "DeliveryMode")
+regTermTest(betareg_fol.base_back6, "MUAC4agez")
+regTermTest(betareg_fol.base_back6, "OxygenYN")
+regTermTest(betareg_fol.base_back6, "abxbeforefirstIV")
+regTermTest(betareg_fol.base_back6, "Dur_IV_fol")
+regTermTest(betareg_fol.base_back6, "Hospital_time")
+
+##Minus duration IV
+
+betareg_fol.base_back7 <- betareg(Beta_fol.base ~ Country + IVonly_factorial + Drug_factorial + Duration_factorial + Age + CRPResult + DeliveryMode + MUAC4agez + OxygenYN + abxbeforefirstIV + Hospital_time, metadata_models)
+summary(betareg_fol.base_back7)
+regTermTest(betareg_fol.base_back7, "Country")
+regTermTest(betareg_fol.base_back7, "IVonly_factorial")
+regTermTest(betareg_fol.base_back7, "Drug_factorial")
+regTermTest(betareg_fol.base_back7, "Duration_factorial")
+regTermTest(betareg_fol.base_back7, "IVonly_factorial + Drug_factorial + Duration_factorial")
+regTermTest(betareg_fol.base_back7, "Age")
+regTermTest(betareg_fol.base_back7, "CRPResult")
+regTermTest(betareg_fol.base_back7, "DeliveryMode")
+regTermTest(betareg_fol.base_back7, "MUAC4agez")
+regTermTest(betareg_fol.base_back7, "OxygenYN")
+regTermTest(betareg_fol.base_back7, "abxbeforefirstIV")
+regTermTest(betareg_fol.base_back7, "Hospital_time")
+
+##Minus hospital time
+
+betareg_fol.base_back8 <- betareg(Beta_fol.base ~ Country + IVonly_factorial + Drug_factorial + Duration_factorial + Age + CRPResult + DeliveryMode + MUAC4agez + OxygenYN + abxbeforefirstIV, metadata_models)
+summary(betareg_fol.base_back8)
+regTermTest(betareg_fol.base_back8, "Country")
+regTermTest(betareg_fol.base_back8, "IVonly_factorial")
+regTermTest(betareg_fol.base_back8, "Drug_factorial")
+regTermTest(betareg_fol.base_back8, "Duration_factorial")
+regTermTest(betareg_fol.base_back8, "IVonly_factorial + Drug_factorial + Duration_factorial")
+regTermTest(betareg_fol.base_back8, "Age")
+regTermTest(betareg_fol.base_back8, "CRPResult")
+regTermTest(betareg_fol.base_back8, "DeliveryMode")
+regTermTest(betareg_fol.base_back8, "MUAC4agez")
+regTermTest(betareg_fol.base_back8, "OxygenYN")
+regTermTest(betareg_fol.base_back8, "abxbeforefirstIV")
+
+##Minus MUAC
+
+betareg_fol.base_back9 <- betareg(Beta_fol.base ~ Country + IVonly_factorial + Drug_factorial + Duration_factorial + Age + CRPResult + DeliveryMode + OxygenYN + abxbeforefirstIV, metadata_models)
+summary(betareg_fol.base_back9)
+regTermTest(betareg_fol.base_back9, "Country")
+regTermTest(betareg_fol.base_back9, "IVonly_factorial")
+regTermTest(betareg_fol.base_back9, "Drug_factorial")
+regTermTest(betareg_fol.base_back9, "Duration_factorial")
+regTermTest(betareg_fol.base_back9, "IVonly_factorial + Drug_factorial + Duration_factorial")
+regTermTest(betareg_fol.base_back9, "Age")
+regTermTest(betareg_fol.base_back9, "CRPResult")
+regTermTest(betareg_fol.base_back9, "DeliveryMode")
+regTermTest(betareg_fol.base_back9, "OxygenYN")
+regTermTest(betareg_fol.base_back9, "abxbeforefirstIV")
+
+##Minus ab before
+
+betareg_fol.base_back10 <- betareg(Beta_fol.base ~ Country + IVonly_factorial + Drug_factorial + Duration_factorial + Age + CRPResult + DeliveryMode + OxygenYN, metadata_models)
+summary(betareg_fol.base_back10)
+regTermTest(betareg_fol.base_back10, "Country")
+regTermTest(betareg_fol.base_back10, "IVonly_factorial")
+regTermTest(betareg_fol.base_back10, "Drug_factorial")
+regTermTest(betareg_fol.base_back10, "Duration_factorial")
+regTermTest(betareg_fol.base_back10, "IVonly_factorial + Drug_factorial + Duration_factorial")
+regTermTest(betareg_fol.base_back10, "Age")
+regTermTest(betareg_fol.base_back10, "CRPResult")
+regTermTest(betareg_fol.base_back10, "DeliveryMode")
+regTermTest(betareg_fol.base_back10, "OxygenYN")
+
+##Minus Oxygen
+
+betareg_fol.base_back11 <- betareg(Beta_fol.base ~ Country + IVonly_factorial + Drug_factorial + Duration_factorial + Age + CRPResult + DeliveryMode, metadata_models)
+summary(betareg_fol.base_back11)
+regTermTest(betareg_fol.base_back11, "Country")
+regTermTest(betareg_fol.base_back11, "IVonly_factorial")
+regTermTest(betareg_fol.base_back11, "Drug_factorial")
+regTermTest(betareg_fol.base_back11, "Duration_factorial")
+regTermTest(betareg_fol.base_back11, "IVonly_factorial + Drug_factorial + Duration_factorial")
+regTermTest(betareg_fol.base_back11, "Age")
+regTermTest(betareg_fol.base_back11, "CRPResult")
+regTermTest(betareg_fol.base_back11, "DeliveryMode")
+
+##Minus CRP
+
+betareg_fol.base_back12 <- betareg(Beta_fol.base ~ Country + IVonly_factorial + Drug_factorial + Duration_factorial + Age + DeliveryMode, metadata_models)
+summary(betareg_fol.base_back12)
+regTermTest(betareg_fol.base_back12, "Country")
+regTermTest(betareg_fol.base_back12, "IVonly_factorial")
+regTermTest(betareg_fol.base_back12, "Drug_factorial")
+regTermTest(betareg_fol.base_back12, "Duration_factorial")
+regTermTest(betareg_fol.base_back12, "IVonly_factorial + Drug_factorial + Duration_factorial")
+regTermTest(betareg_fol.base_back12, "Age")
+regTermTest(betareg_fol.base_back12, "DeliveryMode")
+
+##Minus delivery mode
+
+betareg_fol.base_backfinal <- betareg(Beta_fol.base ~ Country + IVonly_factorial + Drug_factorial + Duration_factorial + Age, metadata_models)
+summary(betareg_fol.base_backfinal)
+regTermTest(betareg_fol.base_backfinal, "Country")
+regTermTest(betareg_fol.base_backfinal, "IVonly_factorial")
+regTermTest(betareg_fol.base_backfinal, "Drug_factorial")
+regTermTest(betareg_fol.base_backfinal, "Duration_factorial")
+regTermTest(betareg_fol.base_backfinal, "IVonly_factorial + Drug_factorial + Duration_factorial")
+regTermTest(betareg_fol.base_backfinal, "Age")
+
+```
